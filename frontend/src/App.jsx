@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
-import { menuAPI } from "./services/menuAPI";
+import { menuAPI } from "./services/menuAPI.js";
 import MenuForm from "./components/MenuForm";
 import MenuCard from "./components/MenuCard";
 

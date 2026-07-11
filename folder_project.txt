@@ -35,3 +35,5 @@ my-project/
     ├── .gitignore               # ➕ ป้องกันการ Push node_modules / .env
     ├── package.json
     └── ... (ไฟล์ config อื่นๆ)
+
+     backend  https://food-backend-62tu.onrender.com
