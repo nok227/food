@@ -60,6 +60,13 @@ app.get("/", (req, res) => {
   });
 });
 
+app.get("/", (req, res) => {
+  res.json({
+    status: "API running",
+    message: "Food Ordering Backend"
+  });
+});
+
 
 // Routes
 app.use("/menus", menuRoutes);
