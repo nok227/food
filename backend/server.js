@@ -61,14 +61,6 @@ io.on("connection", (socket) => {
 
 
 
-// test route
-app.get("/", (req, res) => {
-  res.json({
-    status: "API running",
-    message: "Food Ordering Backend"
-  });
-});
-
 
 // routes
 app.use("/menus", menuRoutes);
