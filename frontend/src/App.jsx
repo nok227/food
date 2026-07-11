@@ -4,6 +4,13 @@ import { menuAPI } from "./services/menuApi";
 import MenuForm from "./components/MenuForm";
 import MenuCard from "./components/MenuCard";
 
+// 🟢 ประกาศ Socket Instance ไว้นอก Component เพื่อไม่ให้เกิดการสลับท่อเปิด-ปิดการเชื่อมต่อบ่อยเกินไปตอน React โหมด Dev รันซ้ำ
+const socket = io(import.meta.env.VITE_SOCKET_URL, {
+  transports: ["websocket", "polling"], // พยายามเชื่อมต่อด้วย WebSocket ก่อน หากไม่ได้จะสลับไปใช้ Polling
+  reconnection: true,
+  reconnectionAttempts: 5,               // พยายามเชื่อมต่อใหม่สูงสุด 5 ครั้ง
+  timeout: 30000                        // เพิ่มเวลา Timeout เป็น 30 วินาที เผื่อกรณี Server ของ Render ตื่นช้า
+});
 
 function App() {
   const [menus, setMenus] = useState([]);
@@ -20,40 +27,33 @@ function App() {
     }
   };
 
-  // การโหลดข้อมูนเมนูและตั้งค่า Socket.IO สำหรับการแจ้งเตือนแบบ realtime
+  // การโหลดข้อมูนเมนูและจัดการ Event Listener สำหรับ Socket.IO
   useEffect(() => {
-
-    const socket = io(import.meta.env.VITE_SOCKET_URL, {
-      transports: ["polling"],
-      reconnection: true,
-      timeout: 20000
-    });
-
-
+    // โหลดข้อมูลครั้งแรก
     loadMenus();
 
-
+    // ฟังเหตุการณ์เมื่อเชื่อมต่อสำเร็จ
     socket.on("connect", () => {
       console.log("🟢 Socket connected:", socket.id);
     });
 
-
+    // ฟังเหตุการณ์เมื่อข้อมูลเมนูมีการอัปเดตแบบ Realtime
     socket.on("menuUpdated", () => {
       console.log("🔄 Menu updated realtime");
       loadMenus();
     });
 
-
+    // ฟังเหตุการณ์ข้อผิดพลาดของการเชื่อมต่อ
     socket.on("connect_error", (error) => {
       console.error("❌ Socket connection error:", error.message);
     });
 
-
+    // 🟢 ล้างและปิดเฉพาะตัวดักจับ (Event Listeners) เมื่อ Component ถูกทำลาย
     return () => {
-      socket.disconnect();
+      socket.off("connect");
+      socket.off("menuUpdated");
+      socket.off("connect_error");
     };
-
-
   }, []);
 
   // จัดการเมื่อส่งข้อมูลจากฟอร์ม (ทั้งเพิ่มและแก้ไข)
@@ -68,7 +68,6 @@ function App() {
       loadMenus();
     } catch (error) {
       console.error("Failed to save menu:", error);
-      // ➕ เสริมตรงนี้: แสดงแจ้งเตือนเมื่อเจอข้อมูลผิดเงื่อนไขจาก Validator หลังบ้าน
       alert(`❌ บันทึกไม่สำเร็จ: ${error.message}`);
     }
   };
@@ -82,7 +81,6 @@ function App() {
         if (editingMenu?.id === id) setEditingMenu(null);
       } catch (error) {
         console.error("Failed to delete menu:", error);
-        // ➕ เสริมตรงนี้: แสดงแจ้งเตือนกรณีลบไม่สำเร็จ
         alert(`❌ ลบไม่สำเร็จ: ${error.message}`);
       }
     }
