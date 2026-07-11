@@ -17,8 +17,9 @@ const server = http.createServer(app);
 // สร้าง Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE"]
+    origin: "https://frontend-1wb1yblwp-np14.vercel.app",
+    methods: ["GET","POST","PUT","DELETE"],
+    credentials: true
   }
 });
 
@@ -27,7 +28,13 @@ app.set("io", io);
 
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    "https://frontend-1wb1yblwp-np14.vercel.app"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
 app.use(express.json());
 
 
