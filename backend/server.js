@@ -1,4 +1,3 @@
-// src/index.js
 require("dotenv").config();
 
 const express = require("express");
@@ -11,85 +10,84 @@ const { globalErrorHandler } = require("./src/middleware/errorHandler");
 
 const app = express();
 
-// สร้าง HTTP Server
 const server = http.createServer(app);
 
-// สร้าง Socket.IO
+
+// CORS
+app.use(
+  cors({
+    origin: [
+      "https://frontend-1wb1yblwp-np14.vercel.app",
+      "http://localhost:5173"
+    ],
+    credentials: true
+  })
+);
+
+
+app.use(express.json());
+
+
+// Socket.IO
 const io = new Server(server, {
   cors: {
     origin: [
       "https://frontend-1wb1yblwp-np14.vercel.app",
       "http://localhost:5173"
     ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST"],
     credentials: true
-  }
+  },
 });
 
-// ส่ง io ให้ controller ใช้งาน
+
 app.set("io", io);
 
 
-// Middleware
-app.use(cors({
-  origin: [
-    "https://frontend-1wb1yblwp-np14.vercel.app",
-    "http://localhost:5173"
-  ],
-  credentials: true
-}));
+io.on("connection", (socket)=>{
 
-app.use(express.json());
-
-
-// Socket connection
-io.on("connection", (socket) => {
   console.log("🟢 Client connected:", socket.id);
 
-  socket.on("disconnect", () => {
+
+  socket.on("disconnect",()=>{
     console.log("🔴 Client disconnected:", socket.id);
   });
+
 });
 
 
-// ทดสอบ API
-app.get("/", (req, res) => {
-  res.json({
-    status: "API running",
-    message: "Food Ordering Backend"
-  });
-});
 
-app.get("/", (req, res) => {
+// test route
+app.get("/",(req,res)=>{
   res.json({
-    status: "API running",
-    message: "Food Ordering Backend"
+    status:"API running",
+    message:"Food Ordering Backend"
   });
 });
 
 
-// Routes
+// routes
 app.use("/menus", menuRoutes);
 
 
-// Route ไม่พบ
-app.use((req, res, next) => {
+// 404
+app.use((req,res,next)=>{
+
   const error = new Error("ไม่พบเส้นทาง API นี้");
   error.status = 404;
   next(error);
+
 });
 
 
-// Error Handler
+// error
 app.use(globalErrorHandler);
 
 
-console.log("DATABASE_URL:", process.env.DATABASE_URL);
 
-
-// เปิด Server
 const PORT = process.env.PORT || 3000;
 
-server.listen(PORT, "0.0.0.0", () => {
+
+server.listen(PORT,"0.0.0.0",()=>{
   console.log(`🚀 API running on port ${PORT}`);
 });

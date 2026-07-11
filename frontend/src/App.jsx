@@ -4,7 +4,6 @@ import { menuAPI } from "./services/menuApi";
 import MenuForm from "./components/MenuForm";
 import MenuCard from "./components/MenuCard";
 
-let socket;
 
 function App() {
   const [menus, setMenus] = useState([]);
@@ -22,35 +21,38 @@ function App() {
   };
 
   // การโหลดข้อมูนเมนูและตั้งค่า Socket.IO สำหรับการแจ้งเตือนแบบ realtime
-useEffect(() => {
+  useEffect(() => {
 
-  socket = io(import.meta.env.VITE_SOCKET_URL, {
-    transports: ["websocket"]
-  });
+    const socket = io(import.meta.env.VITE_SOCKET_URL, {
+      transports: ["websocket", "polling"]
+    });
 
-  loadMenus();
 
-  socket.on("connect", () => {
-    console.log("🟢 Socket connected:", socket.id);
-  });
-
-  socket.on("menuUpdated", () => {
-    console.log("🔄 Menu updated realtime");
     loadMenus();
-  });
-
-  socket.on("connect_error", (error) => {
-    console.error("❌ Socket connection error:", error.message);
-  });
 
 
-  return () => {
-    if (socket) {
+    socket.on("connect", () => {
+      console.log("🟢 Socket connected:", socket.id);
+    });
+
+
+    socket.on("menuUpdated", () => {
+      console.log("🔄 Menu updated realtime");
+      loadMenus();
+    });
+
+
+    socket.on("connect_error", (error) => {
+      console.error("❌ Socket connection error:", error.message);
+    });
+
+
+    return () => {
       socket.disconnect();
-    }
-  };
+    };
 
-}, []);
+
+  }, []);
 
   // จัดการเมื่อส่งข้อมูลจากฟอร์ม (ทั้งเพิ่มและแก้ไข)
   const handleFormSubmit = async (formData) => {
