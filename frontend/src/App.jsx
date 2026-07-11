@@ -24,18 +24,30 @@ function App() {
   // การโหลดข้อมูนเมนูและตั้งค่า Socket.IO สำหรับการแจ้งเตือนแบบ realtime
 useEffect(() => {
 
-  socket = io(import.meta.env.VITE_SOCKET_URL);
+  socket = io(import.meta.env.VITE_SOCKET_URL, {
+    transports: ["websocket"]
+  });
 
   loadMenus();
+
+  socket.on("connect", () => {
+    console.log("🟢 Socket connected:", socket.id);
+  });
 
   socket.on("menuUpdated", () => {
     console.log("🔄 Menu updated realtime");
     loadMenus();
   });
 
+  socket.on("connect_error", (error) => {
+    console.error("❌ Socket connection error:", error.message);
+  });
+
 
   return () => {
-    socket.disconnect();
+    if (socket) {
+      socket.disconnect();
+    }
   };
 
 }, []);

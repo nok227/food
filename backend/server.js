@@ -17,8 +17,11 @@ const server = http.createServer(app);
 // สร้าง Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: "https://frontend-1wb1yblwp-np14.vercel.app",
-    methods: ["GET","POST","PUT","DELETE"],
+    origin: [
+      "https://frontend-1wb1yblwp-np14.vercel.app",
+      "http://localhost:5173"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
 });
@@ -30,11 +33,12 @@ app.set("io", io);
 // Middleware
 app.use(cors({
   origin: [
-    "https://frontend-1wb1yblwp-np14.vercel.app"
+    "https://frontend-1wb1yblwp-np14.vercel.app",
+    "http://localhost:5173"
   ],
-  methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
+
 app.use(express.json());
 
 
@@ -48,11 +52,20 @@ io.on("connection", (socket) => {
 });
 
 
+// ทดสอบ API
+app.get("/", (req, res) => {
+  res.json({
+    status: "API running",
+    message: "Food Ordering Backend"
+  });
+});
+
+
 // Routes
 app.use("/menus", menuRoutes);
 
 
-// บล็อก Route ที่ไม่มีอยู่จริง
+// Route ไม่พบ
 app.use((req, res, next) => {
   const error = new Error("ไม่พบเส้นทาง API นี้");
   error.status = 404;
@@ -67,7 +80,7 @@ app.use(globalErrorHandler);
 console.log("DATABASE_URL:", process.env.DATABASE_URL);
 
 
-// เปิด server
+// เปิด Server
 const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, "0.0.0.0", () => {
