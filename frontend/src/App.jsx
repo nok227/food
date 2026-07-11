@@ -24,7 +24,9 @@ function App() {
   useEffect(() => {
 
     const socket = io(import.meta.env.VITE_SOCKET_URL, {
-      transports: ["websocket", "polling"]
+      transports: ["polling"],
+      reconnection: true,
+      timeout: 20000
     });
 
 

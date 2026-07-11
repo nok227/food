@@ -38,18 +38,22 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
     credentials: true
   },
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
+
+
 
 
 app.set("io", io);
 
 
-io.on("connection", (socket)=>{
+io.on("connection", (socket) => {
 
   console.log("🟢 Client connected:", socket.id);
 
 
-  socket.on("disconnect",()=>{
+  socket.on("disconnect", () => {
     console.log("🔴 Client disconnected:", socket.id);
   });
 
@@ -58,10 +62,10 @@ io.on("connection", (socket)=>{
 
 
 // test route
-app.get("/",(req,res)=>{
+app.get("/", (req, res) => {
   res.json({
-    status:"API running",
-    message:"Food Ordering Backend"
+    status: "API running",
+    message: "Food Ordering Backend"
   });
 });
 
@@ -71,7 +75,7 @@ app.use("/menus", menuRoutes);
 
 
 // 404
-app.use((req,res,next)=>{
+app.use((req, res, next) => {
 
   const error = new Error("ไม่พบเส้นทาง API นี้");
   error.status = 404;
@@ -88,6 +92,6 @@ app.use(globalErrorHandler);
 const PORT = process.env.PORT || 3000;
 
 
-server.listen(PORT,"0.0.0.0",()=>{
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 API running on port ${PORT}`);
 });
