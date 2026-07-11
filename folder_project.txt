@@ -1,0 +1,37 @@
+my-project/
+├── .gitignore                   # 👈 ครอบคลุมทั้งโปรเจกต์ หรือแยกไว้แต่ละฝั่ง
+├── backend/
+│   ├── src/
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── middleware/
+│   │   │   ├── auth.js
+│   │   │   └── errorHandler.js   # ➕ จัดการ Error ส่วนกลาง
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── validators/           # ➕ ตรวจสอบข้อมูลก่อนเข้า Controller
+│   │   ├── utils/                # ➕ ฟังก์ชันอำนวยความสะดวกต่างๆ
+│   │   └── index.js
+│   ├── .env
+│   ├── .gitignore               # ➕ ป้องกันการ Push node_modules / .env
+│   └── package.json
+│
+└── frontend/
+    ├── src/
+    │   ├── assets/               # ➕ เก็บรูปภาพ โลโก้ ไอคอน
+    │   ├── components/
+    │   ├── context/              # ➕ จัดการ Global State เช่น AuthContext.jsx
+    │   ├── hooks/
+    │   ├── layouts/
+    │   ├── pages/
+    │   ├── services/
+    │   │   ├── supabaseClient.js
+    │   │   └── api.js            # ➕ สำหรับเชื่อมต่อกับ Node.js Backend
+    │   ├── utils/                # ➕ ฟังก์ชันช่วยฟอร์แมตข้อมูลหน้าบ้าน
+    │   ├── App.jsx
+    │   ├── main.jsx
+    │   └── index.css
+    ├── .env
+    ├── .gitignore               # ➕ ป้องกันการ Push node_modules / .env
+    ├── package.json
+    └── ... (ไฟล์ config อื่นๆ)
