@@ -4,12 +4,13 @@ import { menuAPI } from "./services/menuApi";
 import MenuForm from "./components/MenuForm";
 import MenuCard from "./components/MenuCard";
 
-// 🟢 ประกาศ Socket Instance ไว้นอก Component เพื่อไม่ให้เกิดการสลับท่อเปิด-ปิดการเชื่อมต่อบ่อยเกินไปตอน React โหมด Dev รันซ้ำ
+// 🟢 อ่านค่าจาก .env แทนการ hardcode
+// ตอน dev: ตั้ง VITE_API_URL=http://localhost:3000 ใน .env.local
+// ตอน production (Vercel): ตั้ง VITE_API_URL=https://food-backend-62tu.onrender.com
+const API_URL = `${import.meta.env.VITE_API_URL}/menus`;
+
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
-  transports: ["websocket", "polling"], // พยายามเชื่อมต่อด้วย WebSocket ก่อน หากไม่ได้จะสลับไปใช้ Polling
-  reconnection: true,
-  reconnectionAttempts: 5,               // พยายามเชื่อมต่อใหม่สูงสุด 5 ครั้ง
-  timeout: 30000                        // เพิ่มเวลา Timeout เป็น 30 วินาที เผื่อกรณี Server ของ Render ตื่นช้า
+  transports: ["websocket", "polling"] // ✨ สำคัญมาก: ใส่ polling เผื่อไว้ด้วย เพราะ Render บางครั้งจะบล็อก websocket ตรงๆ
 });
 
 function App() {
