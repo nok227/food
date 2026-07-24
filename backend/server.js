@@ -7,7 +7,6 @@ const { Server } = require("socket.io");
 
 const menuRoutes = require("./src/routes/menuRoutes");
 const { globalErrorHandler } = require("./src/middleware/errorHandler");
-const prisma = require("./src/config/prisma");
 
 const app = express();
 const server = http.createServer(app);
@@ -82,12 +81,3 @@ server.listen(PORT, () => {
   console.log(`🚀 API running on port ${PORT}`);
 });
 
-// วางไว้ล่างสุดของ server.js ก่อน หรือ หลัง server.listen
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("❌ Unhandled Rejection at:", promise, "reason:", reason);
-  // ไม่สั่ง process.exit() เพื่อไม่ให้ Server ดับ
-});
-
-process.on("uncaughtException", (err) => {
-  console.error("❌ Uncaught Exception thrown:", err);
-});
