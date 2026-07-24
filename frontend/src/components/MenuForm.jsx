@@ -1,20 +1,20 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 function MenuForm({ onSubmit, editData, onCancel }) {
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [name, setName] = useState(editData?.name || "");
+  const [price, setPrice] = useState(editData?.price || "");
+  const [imageUrl, setImageUrl] = useState(editData?.imageUrl || "");
 
-  // ดึงข้อมูลมาใส่ฟอร์มเมื่อมีการกดปุ่ม "แก้ไข"
-  useEffect(() => {
-    if (editData) {
-      setName(editData.name);
-      setPrice(editData.price);
-      setImageUrl(editData.imageUrl || "");
-    } else {
-      resetForm();
-    }
-  }, [editData]);
+  // 🟢 ปรับเปลี่ยนค่า State ตาม Props (ตามคำแนะนำของ React Docs)
+  // เพื่อหลีกเลี่ยงการใช้ useEffect และแก้ไขปัญหา ESLint set-state-in-effect
+  const [prevEditData, setPrevEditData] = useState(editData);
+
+  if (editData !== prevEditData) {
+    setPrevEditData(editData);
+    setName(editData ? editData.name : "");
+    setPrice(editData ? editData.price : "");
+    setImageUrl(editData ? editData.imageUrl || "" : "");
+  }
 
   const resetForm = () => {
     setName("");
@@ -25,7 +25,7 @@ function MenuForm({ onSubmit, editData, onCancel }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name || !price) return alert("กรุณากรอกชื่อและราคาอาหาร");
-    
+
     onSubmit({ name, price: Number(price), imageUrl });
     resetForm();
   };
@@ -51,7 +51,7 @@ function MenuForm({ onSubmit, editData, onCancel }) {
         value={imageUrl}
         onChange={(e) => setImageUrl(e.target.value)}
       />
-      
+
       <div className="flex gap-2">
         <button type="submit" className="bg-blue-600 text-white px-5 py-2 rounded font-medium hover:bg-blue-700 transition">
           {editData ? "บันทึกแก้ไข" : "เพิ่มเมนู"}

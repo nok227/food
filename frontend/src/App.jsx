@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { io } from "socket.io-client";
 import { menuAPI } from "./services/menuApi";
 import MenuForm from "./components/MenuForm";
@@ -7,9 +7,9 @@ import MenuCard from "./components/MenuCard";
 // 🟢 กำหนด URL Backend ตรงๆ เป็นค่าสำรอง (Fallback) หากอ่าน .env ไม่เจอ
 const BACKEND_URL = import.meta.env.VITE_SOCKET_URL || "https://food-backend-62tu.onrender.com";
 
-// 🟢 เชื่อมต่อ Socket ไปยัง Render แน่นอน 100% ไม่ยิงเข้า Vercel ตัวเอง
+// 🟢 เชื่อมต่อ Socket ไปยัง Render
 const socket = io(BACKEND_URL, {
-  transports: ["polling", "websocket"], // ลอง polling ก่อน แล้วค่อย upgrade เป็น websocket
+  transports: ["polling", "websocket"],
   autoConnect: true,
   reconnectionAttempts: 5,
   timeout: 20000
@@ -19,18 +19,22 @@ function App() {
   const [menus, setMenus] = useState([]);
   const [editingMenu, setEditingMenu] = useState(null);
 
-  // โหลดข้อมูลเมนู
-  const loadMenus = async () => {
+  // 🟢 ใช้ useCallback เพื่อป้องกันการสร้างฟังก์ชันใหม่ซ้ำๆ และแก้ ESLint warning
+  const loadMenus = useCallback(async () => {
     try {
       const data = await menuAPI.getAll();
       setMenus(data);
     } catch (error) {
       console.error("Failed to fetch menus:", error);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadMenus();
+    // 🟢 ห่อการดึงข้อมูลเริ่มต้นด้วย async function ใน Effect
+    const initData = async () => {
+      await loadMenus();
+    };
+    initData();
 
     socket.on("connect", () => {
       console.log("🟢 Socket connected:", socket.id);
@@ -50,7 +54,7 @@ function App() {
       socket.off("menuUpdated");
       socket.off("connect_error");
     };
-  }, []);
+  }, [loadMenus]);
 
   // จัดการเมื่อส่งข้อมูลจากฟอร์ม (ทั้งเพิ่มและแก้ไข)
   const handleFormSubmit = async (formData) => {
@@ -89,8 +93,9 @@ function App() {
           Food Ordering Menu
         </h1>
 
-        {/* ส่วนฟอร์มเพิ่ม/แก้ไข */}
+        {/* ส่วนฟอร์มเพิ่ม/แก้ไข (เพิ่ม key เพื่อช่วย Reset State อัตโนมัติเมื่อสลับการแก้ไข) */}
         <MenuForm
+          key={editingMenu ? editingMenu.id : "create"}
           onSubmit={handleFormSubmit}
           editData={editingMenu}
           onCancel={() => setEditingMenu(null)}
