@@ -7,6 +7,7 @@ const { Server } = require("socket.io");
 
 const menuRoutes = require("./src/routes/menuRoutes");
 const { globalErrorHandler } = require("./src/middleware/errorHandler");
+const prisma = require("./src/config/prisma");
 
 const app = express();
 const server = http.createServer(app);
@@ -45,8 +46,16 @@ io.on("connection", (socket) => {
 });
 
 // 🟢 1. ดึงข้อความตรวจสอบระบบ (Health Check) ย้ายขึ้นมาไว้บนสุด เพื่อไม่ให้ติด 404
-app.get("/health", (req, res) => {
-  res.json({ status: "OK", timestamp: new Date().toISOString() });
+app.get("/health", async (req, res) => {
+  try {
+    // ลองดึงข้อมูลจาก Database 1 รายการเพื่อกระตุ้น Supabase ให้ตื่นตลอดเวลา
+    // (เปลี่ยนเป็นคำสั่ง query ของคุณ เช่น prisma.menu.findFirst() หรือ db.query(...))
+    await prisma.menu.findFirst(); 
+
+    res.json({ status: "OK", database: "Connected", timestamp: new Date().toISOString() });
+  } catch (error) {
+    res.status(500).json({ status: "ERROR", database: error.message });
+  }
 });
 
 // 🟢 2. เพิ่มการรองรับหน้าแรกสุด (Root path) เพื่อตอบกลับ Render เผื่อโดนยิงเช็คสถานะ
@@ -71,4 +80,14 @@ const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, () => {
   console.log(`🚀 API running on port ${PORT}`);
+});
+
+// วางไว้ล่างสุดของ server.js ก่อน หรือ หลัง server.listen
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("❌ Unhandled Rejection at:", promise, "reason:", reason);
+  // ไม่สั่ง process.exit() เพื่อไม่ให้ Server ดับ
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("❌ Uncaught Exception thrown:", err);
 });
