@@ -24,12 +24,10 @@ app.use(express.json());
 // Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: "*", // 🟢 เปิดอิสระเพื่อรองรับทุก Domain ของ Vercel
+    origin: true, // อนุญาตให้เชื่อมต่อ Socket ได้สะดวกขึ้น
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   },
-  transports: ["polling", "websocket"], // 🟢 เพิ่มให้ตรงกับ Frontend
-  allowEIO3: true,
   pingTimeout: 60000,
   pingInterval: 25000
 });
