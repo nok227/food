@@ -4,13 +4,15 @@ import { menuAPI } from "./services/menuApi";
 import MenuForm from "./components/MenuForm";
 import MenuCard from "./components/MenuCard";
 
-// 🟢 อ่านค่าจาก .env แทนการ hardcode
-// ตอน dev: ตั้ง VITE_API_URL=http://localhost:3000 ใน .env.local
-// ตอน production (Vercel): ตั้ง VITE_API_URL=https://food-backend-62tu.onrender.com
-const API_URL = `${import.meta.env.VITE_API_URL}/menus`;
+// 🟢 กำหนด URL Backend ตรงๆ เป็นค่าสำรอง (Fallback) หากอ่าน .env ไม่เจอ
+const BACKEND_URL = import.meta.env.VITE_SOCKET_URL || "https://food-backend-62tu.onrender.com";
 
-const socket = io(import.meta.env.VITE_SOCKET_URL, {
-  transports: ["websocket", "polling"] // ✨ สำคัญมาก: ใส่ polling เผื่อไว้ด้วย เพราะ Render บางครั้งจะบล็อก websocket ตรงๆ
+// 🟢 เชื่อมต่อ Socket ไปยัง Render แน่นอน 100% ไม่ยิงเข้า Vercel ตัวเอง
+const socket = io(BACKEND_URL, {
+  transports: ["polling", "websocket"], // ลอง polling ก่อน แล้วค่อย upgrade เป็น websocket
+  autoConnect: true,
+  reconnectionAttempts: 5,
+  timeout: 20000
 });
 
 function App() {
@@ -24,32 +26,25 @@ function App() {
       setMenus(data);
     } catch (error) {
       console.error("Failed to fetch menus:", error);
-      alert(`❌ ไม่สามารถดึงข้อมูลเมนูได้: ${error.message}`);
     }
   };
 
-  // การโหลดข้อมูนเมนูและจัดการ Event Listener สำหรับ Socket.IO
   useEffect(() => {
-    // โหลดข้อมูลครั้งแรก
     loadMenus();
 
-    // ฟังเหตุการณ์เมื่อเชื่อมต่อสำเร็จ
     socket.on("connect", () => {
       console.log("🟢 Socket connected:", socket.id);
     });
 
-    // ฟังเหตุการณ์เมื่อข้อมูลเมนูมีการอัปเดตแบบ Realtime
     socket.on("menuUpdated", () => {
       console.log("🔄 Menu updated realtime");
       loadMenus();
     });
 
-    // ฟังเหตุการณ์ข้อผิดพลาดของการเชื่อมต่อ
     socket.on("connect_error", (error) => {
       console.error("❌ Socket connection error:", error.message);
     });
 
-    // 🟢 ล้างและปิดเฉพาะตัวดักจับ (Event Listeners) เมื่อ Component ถูกทำลาย
     return () => {
       socket.off("connect");
       socket.off("menuUpdated");
