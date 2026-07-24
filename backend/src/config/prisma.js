@@ -1,13 +1,13 @@
 // src/config/prisma.js
 const { PrismaClient } = require("@prisma/client");
 const { PrismaPg } = require("@prisma/adapter-pg");
+const { Pool } = require("pg");
 
-const adapter = new PrismaPg({
-  connectionString: process.env.DIRECT_URL,
+const pool = new Pool({ 
+  connectionString: process.env.DIRECT_URL || process.env.DATABASE_URL 
 });
 
-const prisma = new PrismaClient({
-  adapter,
-});
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 module.exports = prisma;
