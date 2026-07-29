@@ -9,9 +9,11 @@ const BACKEND_URL = import.meta.env.VITE_SOCKET_URL || "https://food-backend-62t
 
 // 🟢 เชื่อมต่อ Socket ไปยัง Render
 const socket = io(BACKEND_URL, {
-  transports: ["polling", "websocket"],
+  transports: ["polling", "websocket"], // ใช้ polling นำทางก่อนเพื่อความเสถียรบน Render
   autoConnect: true,
-  reconnectionAttempts: 5,
+  reconnection: true,
+  reconnectionAttempts: 10,
+  reconnectionDelay: 1000,
   timeout: 20000
 });
 
@@ -19,18 +21,22 @@ function App() {
   const [menus, setMenus] = useState([]);
   const [editingMenu, setEditingMenu] = useState(null);
 
-  // 🟢 ใช้ useCallback เพื่อป้องกันการสร้างฟังก์ชันใหม่ซ้ำๆ และแก้ ESLint warning
+  // 🟢 ดึงข้อมูลเมนูทั้งหมด
   const loadMenus = useCallback(async () => {
     try {
       const data = await menuAPI.getAll();
-      setMenus(data);
+      // กรองเอาเฉพาะข้อมูลที่มีอยู่จริง ไม่เป็น null หรือ undefined
+      if (Array.isArray(data)) {
+        setMenus(data.filter(Boolean));
+      } else {
+        setMenus([]);
+      }
     } catch (error) {
       console.error("Failed to fetch menus:", error);
     }
   }, []);
 
   useEffect(() => {
-    // 🟢 ห่อการดึงข้อมูลเริ่มต้นด้วย async function ใน Effect
     const initData = async () => {
       await loadMenus();
     };
@@ -93,7 +99,7 @@ function App() {
           Food Ordering Menu
         </h1>
 
-        {/* ส่วนฟอร์มเพิ่ม/แก้ไข (เพิ่ม key เพื่อช่วย Reset State อัตโนมัติเมื่อสลับการแก้ไข) */}
+        {/* ส่วนฟอร์มเพิ่ม/แก้ไข */}
         <MenuForm
           key={editingMenu ? editingMenu.id : "create"}
           onSubmit={handleFormSubmit}
@@ -106,9 +112,9 @@ function App() {
           <p className="text-center text-gray-500 py-10">ยังไม่มีเมนูอาหารในระบบ</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {menus.map((menu) => (
+            {menus.map((menu, index) => (
               <MenuCard
-                key={menu.id || Math.random()}
+                key={menu?.id || index}
                 menu={menu}
                 onEdit={setEditingMenu}
                 onDelete={handleDeleteMenu}

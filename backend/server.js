@@ -11,30 +11,33 @@ const { globalErrorHandler } = require("./src/middleware/errorHandler");
 const app = express();
 const server = http.createServer(app);
 
-// 🟢 1. ตั้งค่า CORS ให้รองรับ Request จาก Vercel และ Localhost
+// 🟢 บอกให้ Express เชื่อถือ Proxy ของ Render (ป้องกันการหลุดเชื่อมต่อของ Socket)
+app.enable("trust proxy");
+
+// 🟢 1. ตั้งค่า CORS
 app.use(
   cors({
-    origin: true, // เปิดรับทราฟฟิกชั่วคราวเพื่อให้ Frontend ต่อติดง่าย ไม่ติดปัญหา CORS
+    origin: true,
     credentials: true
   })
 );
 
 app.use(express.json());
 
-// 🟢 2. ตั้งค่า Socket.IO ให้ตรงกับ Frontend (App.jsx)
+// 🟢 2. ตั้งค่า Socket.IO ให้เสถียรบน Render
 const io = new Server(server, {
   cors: {
     origin: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   },
-  transports: ["polling", "websocket"], // 🟢 เพิ่มให้ตรงกับ Transports ฝั่ง Client
+  transports: ["polling", "websocket"],
   allowEIO3: true,
   pingTimeout: 60000,
   pingInterval: 25000
 });
 
-// แชร์ตัวแปร io เข้าไปใน Express App เพื่อให้ Routes/Controllers ดึงไปใช้งานได้ (req.app.get("io"))
+// แชร์ตัวแปร io เข้าไปใน Express App
 app.set("io", io);
 
 io.on("connection", (socket) => {
@@ -45,7 +48,7 @@ io.on("connection", (socket) => {
   });
 });
 
-// 🟢 3. Health Check & Root Path (สำหรับปลุก Render และเช็คสถานะระบบ)
+// 🟢 3. Health Check & Root Path
 app.get("/health", (req, res) => {
   res.json({
     status: "OK",
@@ -61,14 +64,14 @@ app.get("/", (req, res) => {
 // 🟢 4. Routes หลักของ API
 app.use("/menus", menuRoutes);
 
-// 🟢 5. 404 Handler (สำหรับ URL ที่ไม่มีจริงในระบบ)
+// 🟢 5. 404 Handler
 app.use((req, res, next) => {
   const error = new Error("ไม่พบเส้นทาง API นี้");
   error.status = 404;
   next(error);
 });
 
-// 🟢 6. Global Error Handler (ตัวรับ Error ทั้งหมดมาจัดการที่เดียว)
+// 🟢 6. Global Error Handler
 app.use(globalErrorHandler);
 
 // 🟢 7. Start Server
@@ -78,7 +81,7 @@ server.listen(PORT, () => {
   console.log(`🚀 API running on port ${PORT}`);
 });
 
-// 🟢 8. ดักจับ Error ระดับ Process ป้องกันไม่ให้ Server Crash ดับเอง
+// 🟢 8. ดักจับ Error ระดับ Process
 process.on("unhandledRejection", (reason, promise) => {
   console.error("❌ Unhandled Rejection at:", promise, "reason:", reason);
 });
