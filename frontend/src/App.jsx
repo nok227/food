@@ -108,7 +108,7 @@ function App() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {menus.map((menu) => (
               <MenuCard
-                key={menu.id}
+                key={menu.id || Math.random()}
                 menu={menu}
                 onEdit={setEditingMenu}
                 onDelete={handleDeleteMenu}
