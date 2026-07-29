@@ -1,34 +1,30 @@
 // src/middleware/validators.js
 
 exports.validateMenu = (req, res, next) => {
-  const { name, price, imageUrl } = req.body;
+  let { name, price, imageUrl } = req.body;
 
-  // 1. ตรวจสอบชื่ออาหาร
+  // 1. จัดการชื่ออาหาร (ถ้าไม่ใส่มา หรือไม่ใช่ข้อความ ให้ใช้ค่า Default)
   if (!name || typeof name !== "string" || name.trim() === "") {
-    return res.status(400).json({ 
-      error: "กรุณาระบุชื่ออาหาร และต้องเป็นตัวอักษรเท่านั้น" 
-    });
+    req.body.name = "ไม่ระบุชื่อเมนู";
+  } else {
+    req.body.name = name.trim();
   }
 
-  // 2. ตรวจสอบราคา
+  // 2. จัดการราคา (ถ้าแปลงเป็นตัวเลขไม่ได้ หรือค่าน้อยกว่า 0 ให้ปรับเป็น 0)
   const priceNum = Number(price);
-  if (isNaN(priceNum) || priceNum <= 0) {
-    return res.status(400).json({ 
-      error: "ราคาอาหารต้องเป็นตัวเลข และมีค่ามากกว่า 0 บาท" 
-    });
+  if (isNaN(priceNum) || priceNum < 0) {
+    req.body.price = 0;
+  } else {
+    req.body.price = priceNum;
   }
 
-  // 3. ตรวจสอบรูปแบบ URL (กรณีที่ส่งมา)
-  if (imageUrl) {
-    const urlPattern = /^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp|svg))/i;
-    // หมายเหตุ: เช็กเบื้องต้น ถ้ารูปแบบไม่ตรง และไม่ได้ขึ้นต้นด้วย http ให้แจ้งเตือนได้ (หรือจะปิดส่วนนี้ถ้าใช้ base64)
-    if (typeof imageUrl !== "string") {
-      return res.status(400).json({ error: "รูปแบบ URL ของรูปภาพไม่ถูกต้อง" });
-    }
+  // 3. จัดการ URL รูปภาพ (ถ้าส่งมาไม่ใช่ string ให้ปรับเป็น null)
+  if (imageUrl && typeof imageUrl !== "string") {
+    req.body.imageUrl = null;
+  } else {
+    req.body.imageUrl = imageUrl || null;
   }
 
-  // ข้อมูลผ่านการตรวจสอบ -> ปรับฟอร์แมตให้พร้อมใช้งาน -> ไปขั้นตอนถัดไป
-  req.body.name = name.trim();
-  req.body.price = priceNum;
+  // ปล่อยให้ผ่านไปบันทึกข้อมูลได้ทุกกรณี
   next();
 };
