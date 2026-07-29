@@ -1,62 +1,69 @@
-// src/components/MenuCard.jsx
+import { useState } from "react";
 
-function MenuCard({ menu, onEdit, onDelete }) {
-  if (!menu) return null;
+function MenuForm({ onSubmit, editData, onCancel }) {
+  const [name, setName] = useState(editData?.name || "");
+  const [price, setPrice] = useState(editData?.price || "");
+  const [imageUrl, setImageUrl] = useState(editData?.imageUrl || "");
 
-  // รูปภาพสำรองเมื่อไม่มีรูป หรือ URL ไม่ถูกต้อง
-  const fallbackImg = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=500";
+  // 🟢 ปรับเปลี่ยนค่า State ตาม Props (ตามคำแนะนำของ React Docs)
+  // เพื่อหลีกเลี่ยงการใช้ useEffect และแก้ไขปัญหา ESLint set-state-in-effect
+  const [prevEditData, setPrevEditData] = useState(editData);
 
-  // ตรวจสอบว่า imageUrl เป็น URL ที่ถูกต้องขึ้นต้นด้วย http:// หรือ https:// หรือไม่
-  const hasValidImage = 
-    menu?.imageUrl && 
-    typeof menu.imageUrl === "string" && 
-    (menu.imageUrl.startsWith("http://") || menu.imageUrl.startsWith("https://"));
+  if (editData !== prevEditData) {
+    setPrevEditData(editData);
+    setName(editData ? editData.name : "");
+    setPrice(editData ? editData.price : "");
+    setImageUrl(editData ? editData.imageUrl || "" : "");
+  }
+
+  const resetForm = () => {
+    setName("");
+    setPrice("");
+    setImageUrl("");
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!name || !price) return alert("กรุณากรอกชื่อและราคาอาหาร");
+
+    onSubmit({ name, price: Number(price), imageUrl });
+    resetForm();
+  };
 
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 flex flex-col justify-between">
-      {/* ส่วนรูปภาพ */}
-      <div className="h-48 w-full bg-gray-100 overflow-hidden relative">
-        <img
-          src={hasValidImage ? menu.imageUrl : fallbackImg}
-          alt={menu?.name || "รูปเมนู"}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            // ตัดการทำงานของ onError ทันทีเพื่อป้องกัน Loop นรก
-            e.currentTarget.onerror = null;
-            e.currentTarget.src = fallbackImg;
-          }}
-        />
-      </div>
+    <form onSubmit={handleSubmit} className="bg-white p-5 rounded-xl shadow mb-8 flex flex-wrap gap-3 items-center">
+      <input
+        className="border p-2 rounded flex-1 min-w-[200px]"
+        placeholder="ชื่ออาหาร"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <input
+        className="border p-2 rounded w-32"
+        placeholder="ราคา"
+        type="number"
+        value={price}
+        onChange={(e) => setPrice(e.target.value)}
+      />
+      <input
+        className="border p-2 rounded flex-1 min-w-[250px]"
+        placeholder="รูปภาพ URL"
+        value={imageUrl}
+        onChange={(e) => setImageUrl(e.target.value)}
+      />
 
-      {/* ส่วนข้อมูลชื่อและราคา */}
-      <div className="p-4 flex-1 flex flex-col justify-between">
-        <div>
-          <h3 className="text-lg font-bold text-gray-800">
-            {menu?.name || "ไม่ระบุชื่อเมนู"}
-          </h3>
-          <p className="text-emerald-600 font-semibold mt-1">
-            ฿{Number(menu?.price || 0).toLocaleString()}
-          </p>
-        </div>
-
-        {/* ปุ่มแก้ไข / ลบ */}
-        <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100">
-          <button
-            onClick={() => onEdit && onEdit(menu)}
-            className="flex-1 px-3 py-1.5 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition"
-          >
-            แก้ไข
+      <div className="flex gap-2">
+        <button type="submit" className="bg-blue-600 text-white px-5 py-2 rounded font-medium hover:bg-blue-700 transition">
+          {editData ? "บันทึกแก้ไข" : "เพิ่มเมนู"}
+        </button>
+        {editData && (
+          <button type="button" onClick={onCancel} className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 transition">
+            ยกเลิก
           </button>
-          <button
-            onClick={() => onDelete && onDelete(menu?.id)}
-            className="flex-1 px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition"
-          >
-            ลบ
-          </button>
-        </div>
+        )}
       </div>
-    </div>
+    </form>
   );
 }
 
-export default MenuCard;
+export default MenuForm;
