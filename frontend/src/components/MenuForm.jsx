@@ -3,34 +3,32 @@
 function MenuCard({ menu, onEdit, onDelete }) {
   if (!menu) return null;
 
-  // รูปสำรองกรณีไม่มีรูป หรือลิงก์พัง
-  const fallbackImg = "https://placehold.co/600x400/e2e8f0/475569?text=No+Image";
+  // รูปภาพสำรองเมื่อไม่มีรูป หรือ URL ไม่ถูกต้อง
+  const fallbackImg = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=500";
 
-  // เช็กว่า URL เป็นลิงก์ที่ขึ้นต้นด้วย http/https จริงหรือไม่ (ป้องกันพวก 'sssss' หรือ 'Zhhshs')
-  const isValidUrl = (url) => {
-    if (!url || typeof url !== "string") return false;
-    return url.startsWith("http://") || url.startsWith("https://");
-  };
-
-  const initialSrc = isValidUrl(menu?.imageUrl) ? menu.imageUrl : fallbackImg;
+  // ตรวจสอบว่า imageUrl เป็น URL ที่ถูกต้องขึ้นต้นด้วย http:// หรือ https:// หรือไม่
+  const hasValidImage = 
+    menu?.imageUrl && 
+    typeof menu.imageUrl === "string" && 
+    (menu.imageUrl.startsWith("http://") || menu.imageUrl.startsWith("https://"));
 
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 flex flex-col justify-between">
-      {/* ส่วนแสดงรูปภาพ */}
+      {/* ส่วนรูปภาพ */}
       <div className="h-48 w-full bg-gray-100 overflow-hidden relative">
         <img
-          src={initialSrc}
+          src={hasValidImage ? menu.imageUrl : fallbackImg}
           alt={menu?.name || "รูปเมนู"}
           className="w-full h-full object-cover"
           onError={(e) => {
-            // 🟢 ป้องกันลูปนรก: ถอด onError ออกทันทีหลังทำงานครั้งแรก
-            e.currentTarget.onerror = null; 
+            // ตัดการทำงานของ onError ทันทีเพื่อป้องกัน Loop นรก
+            e.currentTarget.onerror = null;
             e.currentTarget.src = fallbackImg;
           }}
         />
       </div>
 
-      {/* ส่วนแสดงข้อมูล */}
+      {/* ส่วนข้อมูลชื่อและราคา */}
       <div className="p-4 flex-1 flex flex-col justify-between">
         <div>
           <h3 className="text-lg font-bold text-gray-800">
