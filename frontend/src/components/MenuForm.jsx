@@ -1,43 +1,49 @@
 // src/components/MenuCard.jsx
 
 function MenuCard({ menu, onEdit, onDelete }) {
-  // 🟢 1. ดักป้องกันกรณีข้อมูล menu เป็น null หรือ undefined
   if (!menu) return null;
 
-  // 🟢 2. ตรวจเช็กว่า imageUrl เป็นลิงก์รูปภาพจริงๆ (ขึ้นต้นด้วย http:// หรือ https://) หรือไม่
-  const isRealUrl =
-    typeof menu.imageUrl === "string" &&
-    (menu.imageUrl.startsWith("http://") || menu.imageUrl.startsWith("https://"));
+  // ตรวจสอบอย่างเข้มงวดว่าต้องเป็น URL จริงที่ขึ้นต้นด้วย http:// หรือ https:// เท่านั้น
+  const isValidHttpUrl = (string) => {
+    if (!string || typeof string !== "string") return false;
+    return string.startsWith("http://") || string.startsWith("https://");
+  };
+
+  const hasImage = isValidHttpUrl(menu.imageUrl);
 
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 flex flex-col justify-between p-4">
-      {/* ส่วนแสดงรูปภาพ (ถ้าลิงก์พัง จะโชว์กรอบสีเทาแทน ไม่ปล่อยให้ App พัง) */}
+      {/* ส่วนแสดงรูปภาพ: ถ้าไม่ใช่ URL จริง จะไม่ใช้แท็ก <img> เลย เพื่อป้องกันเบราว์เซอร์ยิง Request มั่ว */}
       <div className="h-40 w-full bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center relative mb-3">
-        {isRealUrl ? (
+        {hasImage ? (
           <img
             src={menu.imageUrl}
             alt={menu.name || "รูปเมนู"}
             className="w-full h-full object-cover"
             onError={(e) => {
-              // ถ้าลิงก์ขึ้นต้นด้วย http แต่เป็นลิงก์เสีย ดึงรูปไม่ได้ ให้เปลี่ยนเป็นข้อความแจ้งเตือนทันที
+              // ถ้าลิงก์พัง ซ่อนตัวรูปแล้วเปิดข้อความเตือนแทน
               e.currentTarget.style.display = "none";
-              e.currentTarget.nextElementSibling.style.display = "flex";
+              if (e.currentTarget.nextElementSibling) {
+                e.currentTarget.nextElementSibling.style.display = "flex";
+              }
             }}
           />
         ) : null}
 
-        {/* กรอบแสดงกรณีรูปพัง / ใส่ข้อความมั่วมา เช่น 'sssss' หรือ 'Zhhshs' */}
+        {/* กล่องข้อความแสดงแทนเมื่อรูปพัง หรือใส่ค่ามั่วมา เช่น 'sssss' */}
         <div
-          className={`w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-100 text-xs p-2 text-center ${
-            isRealUrl ? "hidden" : "flex"
+          className={`w-full h-full flex flex-col items-center justify-center text-gray-500 bg-gray-100 text-xs p-2 text-center ${
+            hasImage ? "hidden" : "flex"
           }`}
         >
-          <span className="font-bold text-gray-500 mb-1">⚠️ รูปภาพไม่ถูกต้อง</span>
-          <span className="truncate max-w-[150px]">{String(menu.imageUrl || "ไม่มีรูป")}</span>
+          <span className="font-bold text-amber-600 mb-1">⚠️ รูปภาพไม่ถูกต้อง</span>
+          <span className="truncate max-w-[150px] text-gray-400">
+            {menu.imageUrl || "ไม่ได้ระบุ URL"}
+          </span>
         </div>
       </div>
 
-      {/* ส่วนแสดงข้อมูลชื่อและราคา (แสดงแน่นอน 100%) */}
+      {/* ส่วนข้อมูลชื่อและราคา (โชว์แน่นอน 100%) */}
       <div className="flex-1 flex flex-col justify-between">
         <div>
           <h3 className="text-lg font-bold text-gray-800 break-words">
@@ -48,7 +54,7 @@ function MenuCard({ menu, onEdit, onDelete }) {
           </p>
         </div>
 
-        {/* ปุ่มกดลบ/แก้ไข (เอาไว้ให้คุณกดลบรายการที่พังทิ้งได้) */}
+        {/* ปุ่มลบ / แก้ไข */}
         <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100">
           <button
             onClick={() => onEdit && onEdit(menu)}
