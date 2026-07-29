@@ -1,25 +1,32 @@
 // src/components/MenuCard.jsx
-import { useState } from "react";
 
 function MenuCard({ menu, onEdit, onDelete }) {
-  // ใช้ State เช็กว่ารูปโหลดผ่านหรือไม่
-  const [imgError, setImgError] = useState(false);
-
   if (!menu) return null;
 
-  // รูปสำรองกรณีไม่มีรูป หรือรูปพัง
-  const fallbackImg = "https://placehold.co/600x400/e2e8f0/475569?text=Food+Image";
+  // รูปสำรองกรณีไม่มีรูป หรือลิงก์พัง
+  const fallbackImg = "https://placehold.co/600x400/e2e8f0/475569?text=No+Image";
+
+  // เช็กว่า URL เป็นลิงก์ที่ขึ้นต้นด้วย http/https จริงหรือไม่ (ป้องกันพวก 'sssss' หรือ 'Zhhshs')
+  const isValidUrl = (url) => {
+    if (!url || typeof url !== "string") return false;
+    return url.startsWith("http://") || url.startsWith("https://");
+  };
+
+  const initialSrc = isValidUrl(menu?.imageUrl) ? menu.imageUrl : fallbackImg;
 
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 flex flex-col justify-between">
       {/* ส่วนแสดงรูปภาพ */}
       <div className="h-48 w-full bg-gray-100 overflow-hidden relative">
         <img
-          src={imgError || !menu?.imageUrl ? fallbackImg : menu.imageUrl}
+          src={initialSrc}
           alt={menu?.name || "รูปเมนู"}
           className="w-full h-full object-cover"
-          // 🟢 ถ้าโหลดรูปไม่ขึ้น จะเปลี่ยน State เป็น true ทันที (และทำงานครั้งเดียว ไม่เกิด Infinite loop)
-          onError={() => setImgError(true)}
+          onError={(e) => {
+            // 🟢 ป้องกันลูปนรก: ถอด onError ออกทันทีหลังทำงานครั้งแรก
+            e.currentTarget.onerror = null; 
+            e.currentTarget.src = fallbackImg;
+          }}
         />
       </div>
 
