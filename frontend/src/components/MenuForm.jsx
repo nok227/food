@@ -1,31 +1,31 @@
 // src/components/MenuCard.jsx
+import { useState } from "react";
 
 function MenuCard({ menu, onEdit, onDelete }) {
-  // 🟢 1. ดักป้องกันกรณีที่ object 'menu' ส่งมาเป็น undefined/null เปล่าๆ
+  // ใช้ State เช็กว่ารูปโหลดผ่านหรือไม่
+  const [imgError, setImgError] = useState(false);
+
   if (!menu) return null;
 
-  const defaultImage = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=500";
+  // รูปสำรองกรณีไม่มีรูป หรือรูปพัง
+  const fallbackImg = "https://placehold.co/600x400/e2e8f0/475569?text=Food+Image";
 
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 flex flex-col justify-between">
       {/* ส่วนแสดงรูปภาพ */}
       <div className="h-48 w-full bg-gray-100 overflow-hidden relative">
         <img
-          // 🟢 2. ใส่ menu?.imageUrl เพื่อป้องกันอ่านค่าจาก undefined
-          src={menu?.imageUrl || defaultImage}
-          alt={menu?.name || "รูปเมนูอาหาร"}
+          src={imgError || !menu?.imageUrl ? fallbackImg : menu.imageUrl}
+          alt={menu?.name || "รูปเมนู"}
           className="w-full h-full object-cover"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = defaultImage;
-          }}
+          // 🟢 ถ้าโหลดรูปไม่ขึ้น จะเปลี่ยน State เป็น true ทันที (และทำงานครั้งเดียว ไม่เกิด Infinite loop)
+          onError={() => setImgError(true)}
         />
       </div>
 
       {/* ส่วนแสดงข้อมูล */}
       <div className="p-4 flex-1 flex flex-col justify-between">
         <div>
-          {/* 🟢 3. ใส่ menu?.name และ menu?.price ป้องกัน error ซ้ำจุดอื่น */}
           <h3 className="text-lg font-bold text-gray-800">
             {menu?.name || "ไม่ระบุชื่อเมนู"}
           </h3>
