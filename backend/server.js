@@ -34,8 +34,9 @@ const io = new Server(server, {
   },
   transports: ["polling", "websocket"],
   allowEIO3: true,
-  pingTimeout: 60000,
-  pingInterval: 25000
+  pingTimeout: 30000,      // ปรับลดลงมาเพื่อให้ Detect สายหลุดได้ไวขึ้น
+  pingInterval: 10000,     // ส่ง Ping ทุกๆ 10 วินาที ป้องกัน Render ตัดสาย
+  perMessageDeflate: false // 🟢 ปิดการบีบอัดข้อมูล ป้องกัน Proxy ของ Render ทำสายหลุด
 });
 
 // แชร์ตัวแปร io เข้าไปใน Express App

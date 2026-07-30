@@ -8,14 +8,14 @@ import MenuCard from "./components/MenuCard";
 const BACKEND_URL = import.meta.env.VITE_SOCKET_URL || "https://food-backend-62tu.onrender.com";
 
 // 🟢 เชื่อมต่อ Socket ไปยัง Render
-const socket = io(BACKEND_URL, {
-  transports: ["polling", "websocket"], // ใช้ polling นำทางก่อนเพื่อความเสถียรบน Render
-  autoConnect: true,
-  reconnection: true,
-  reconnectionAttempts: 10,
-  reconnectionDelay: 1000,
-  timeout: 20000
-});
+  const socket = io(BACKEND_URL, {
+    transports: ["polling"], // ใช้ polling นำทางก่อนเพื่อความเสถียรบน Render
+    autoConnect: true,
+    reconnection: true,
+    reconnectionAttempts: 10,
+    reconnectionDelay: 1000,
+    timeout: 20000
+  });
 
 function App() {
   const [menus, setMenus] = useState([]);
