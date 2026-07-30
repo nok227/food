@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 
-// ตรวจสอบว่าเป็น URL หรือ Base64 image
+// ตรวจสอบว่าเป็น URL หรือ Base64 Data URL
 const isValidImageSource = (string) => {
   if (!string || typeof string !== "string") return false;
   return (
@@ -63,7 +63,7 @@ function MenuForm({ onSubmit, editData, onCancel }) {
     }
   };
 
-  // เคลียร์/ยกเลิกรูปภาพในฟอร์มก่อนบันทึก
+  // เคลียร์/ยกเลิกรูปภาพในฟอร์มก่อนกดบันทึก
   const handleClearImage = () => {
     setFormData((prev) => ({ ...prev, imageUrl: "" }));
     if (fileInputRef.current) fileInputRef.current.value = "";
