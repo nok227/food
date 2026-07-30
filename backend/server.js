@@ -22,7 +22,8 @@ app.use(
   })
 );
 
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 // 🟢 2. ตั้งค่า Socket.IO ให้เสถียรบน Render
 const io = new Server(server, {
