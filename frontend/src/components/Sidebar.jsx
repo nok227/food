@@ -1,16 +1,16 @@
 import { NavLink } from "react-router-dom";
 import { navItems } from "../data/navItems";
 
-// 🟢 Sidebar ทำหน้าที่ 2 อย่าง:
-// - จอ >= md: แสดงเป็นแผงนิ่งอยู่ด้านซ้ายตลอด (in-flow ปกติ)
-// - จอมือถือ: กลายเป็นเมนูแบบเลื่อนออกจากซ้าย (drawer) ควบคุมเปิด/ปิดผ่าน props open/onClose
+// 🟢 Sidebar: เมนูหลักเดียวของเว็บ (แทน Nav บนที่ถูกซ่อนไปแล้ว)
+// ทำงานเป็นเมนูแบบเลื่อนออกจากซ้าย (drawer) เหมือนกันทุกขนาดจอ
+// เปิด/ปิดผ่านปุ่มแฮมเบอร์เกอร์ใน Header (props open/onClose)
 function Sidebar({ open, onClose }) {
   return (
     <>
-      {/* ฉากหลังสีดำโปร่งตอนเปิดเมนูมือถือ กดเพื่อปิด */}
+      {/* ฉากหลังสีดำโปร่งตอนเปิดเมนู กดเพื่อปิด (แสดงทุกขนาดจอ) */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/40 z-30 md:hidden"
+          className="fixed inset-0 bg-black/40 z-30"
           onClick={onClose}
         />
       )}
@@ -18,10 +18,9 @@ function Sidebar({ open, onClose }) {
       <aside
         className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 p-5 overflow-y-auto
         transform transition-transform duration-200
-        md:static md:translate-x-0 md:z-auto md:w-56 md:shrink-0
         ${open ? "translate-x-0" : "-translate-x-full"}`}
       >
-        <div className="flex items-center justify-between mb-4 md:hidden">
+        <div className="flex items-center justify-between mb-4">
           <span className="text-sm font-bold text-gray-500 uppercase tracking-wide">
             เมนู
           </span>
@@ -34,10 +33,6 @@ function Sidebar({ open, onClose }) {
             ✕
           </button>
         </div>
-
-        <h2 className="hidden md:block text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">
-          เมนู
-        </h2>
 
         <nav className="flex flex-col gap-1">
           {navItems.map((item) => (

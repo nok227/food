@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Header from "../components/Header";
-import Nav from "../components/Nav";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
 import TabsBar from "../components/TabsBar";
@@ -11,24 +10,24 @@ import TabsBar from "../components/TabsBar";
 //
 // การเลื่อน (scroll):
 // - นอกสุด h-screen + overflow-hidden -> ตัวหน้าเว็บทั้งหน้าไม่เลื่อน
-// - Header, Nav, TabsBar, Sidebar อยู่นิ่งกับที่เสมอ
+// - Header, TabsBar, Sidebar อยู่นิ่งกับที่เสมอ
 // - เฉพาะฝั่งขวา (Content + Footer) เท่านั้นที่เลื่อนได้ (overflow-y-auto)
 //
-// มือถือ: Sidebar กลายเป็นเมนูเลื่อนออก เปิด/ปิดด้วยปุ่มแฮมเบอร์เกอร์ใน Header
+// Nav บนถูกซ่อนไปแล้ว (ทุกขนาดจอ) — ใช้ Sidebar เป็นเมนูหลักแทน
+// เปิด/ปิด Sidebar ด้วยปุ่มแฮมเบอร์เกอร์ใน Header ได้ทุกขนาดจอ (toggle)
 function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
 
-  // ปิดเมนูมือถืออัตโนมัติทุกครั้งที่เปลี่ยนหน้า
+  // ปิดเมนูอัตโนมัติทุกครั้งที่เปลี่ยนหน้า
   useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname]);
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
-      <Header onMenuClick={() => setSidebarOpen(true)} />
+      <Header onMenuClick={() => setSidebarOpen((prev) => !prev)} />
       <TabsBar />
-      <Nav />
 
       <div className="flex flex-1 min-h-0">
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
