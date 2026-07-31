@@ -1,70 +1,32 @@
-import { Suspense, lazy } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import MainLayout from "../layouts/MainLayout";
-import LoadingPage from "../components/LoadingPage";
-import { RecentTabsProvider } from "../context/RecentTabsContext";
+// 🟢 หน้าตัวอย่าง: เกี่ยวกับเรา
+function AboutPage() {
+  const features = [
+    { title: "รวดเร็ว", desc: "อัปเดตเมนูแบบเรียลไทม์ ไม่ต้องรีเฟรชหน้า" },
+    { title: "ใช้งานง่าย", desc: "ฟอร์มเพิ่ม/แก้ไขเมนูออกแบบมาให้ใช้งานง่าย" },
+    { title: "รองรับทุกอุปกรณ์", desc: "ใช้งานได้ทั้งบนมือถือ แท็บเล็ต และคอมพิวเตอร์" },
+  ];
 
-// 🟢 โหลดแต่ละหน้าแบบ lazy -> ได้เห็น LoadingPage จริงๆ ตอนสลับหน้า (code splitting)
-const HomePage = lazy(() => import("../pages/HomePage"));
-const OrdersPage = lazy(() => import("../pages/OrdersPage"));
-const AboutPage = lazy(() => import("../pages/AboutPage"));
-const ContactPage = lazy(() => import("../pages/ContactPage"));
-const NotFoundPage = lazy(() => import("../pages/NotFoundPage"));
-
-// 🟢 กำหนดเส้นทาง (Routes) ของแอปทั้งหมดไว้ที่นี่ที่เดียว
-// ถ้าจะเพิ่มหน้าใหม่ในอนาคต: 1) เพิ่มไฟล์ใน pages/ 2) เพิ่ม path ใน data/navItems.js
-// 3) เพิ่ม <Route> ที่นี่
-function AppRoutes() {
   return (
-    <BrowserRouter>
-      <RecentTabsProvider>
-        <Routes>
-          <Route path="/" element={<MainLayout />}>
-            <Route
-              index
-              element={
-                <Suspense fallback={<LoadingPage />}>
-                  <HomePage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="orders"
-              element={
-                <Suspense fallback={<LoadingPage />}>
-                  <OrdersPage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="about"
-              element={
-                <Suspense fallback={<LoadingPage />}>
-                  <AboutPage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="contact"
-              element={
-                <Suspense fallback={<LoadingPage />}>
-                  <ContactPage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="*"
-              element={
-                <Suspense fallback={<LoadingPage />}>
-                  <NotFoundPage />
-                </Suspense>
-              }
-            />
-          </Route>
-        </Routes>
-      </RecentTabsProvider>
-    </BrowserRouter>
+    <div className="flex flex-col gap-6">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">เกี่ยวกับเรา</h2>
+        <p className="text-gray-600 leading-relaxed">
+          Food Ordering Menu คือระบบจัดการเมนูอาหารสำหรับร้านค้าขนาดเล็กถึงกลาง
+          ช่วยให้เจ้าของร้านเพิ่ม แก้ไข และลบเมนูได้แบบเรียลไทม์
+          พร้อมอัปเดตให้ลูกค้าเห็นทันทีผ่านการเชื่อมต่อ Socket.IO
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {features.map((item) => (
+          <div key={item.title} className="bg-white rounded-xl border border-gray-100 shadow p-5">
+            <h3 className="font-bold text-gray-800 mb-1">{item.title}</h3>
+            <p className="text-sm text-gray-500">{item.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
-export default AppRoutes;
+export default AboutPage;
