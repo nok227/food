@@ -1,30 +1,26 @@
 import { NavLink } from "react-router-dom";
+import { navItems } from "../data/navItems";
 
-// 🟢 เมนูนำทางหลัก ใช้ NavLink เพื่อให้ลิงก์ที่ Active มีสไตล์ต่างจากปกติอัตโนมัติ
-const navItems = [
-  { to: "/", label: "หน้าเมนู", end: true },
-  // เพิ่มลิงก์หน้าอื่นๆ ในอนาคตได้ที่นี่ เช่น
-  // { to: "/orders", label: "ออเดอร์" },
-];
-
+// 🟢 เมนูนำทางแนวนอน แสดงเฉพาะจอ md ขึ้นไป (จอมือถือใช้ Sidebar แบบเลื่อนออกแทน)
 function Nav() {
   return (
-    <nav className="bg-amber-500 px-8">
+    <nav className="hidden md:block shrink-0 bg-amber-500 px-8">
       <ul className="flex gap-2">
         {navItems.map((item) => (
-          <li key={item.to}>
+          <li key={item.path}>
             <NavLink
-              to={item.to}
-              end={item.end}
+              to={item.path}
+              end={item.path === "/"}
               className={({ isActive }) =>
-                `inline-block px-4 py-2 text-sm font-semibold transition ${
+                `inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold transition ${
                   isActive
                     ? "bg-white text-amber-600"
                     : "text-white hover:bg-amber-600"
                 }`
               }
             >
-              {item.label}
+              <span>{item.icon}</span>
+              <span>{item.label}</span>
             </NavLink>
           </li>
         ))}

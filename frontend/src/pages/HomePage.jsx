@@ -20,6 +20,7 @@ const socket = io(BACKEND_URL, {
 function HomePage() {
   const [menus, setMenus] = useState([]);
   const [editingMenu, setEditingMenu] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // 🟢 ดึงข้อมูลเมนูทั้งหมด
   const loadMenus = useCallback(async () => {
@@ -33,6 +34,8 @@ function HomePage() {
       }
     } catch (error) {
       console.error("Failed to fetch menus:", error);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -103,7 +106,20 @@ function HomePage() {
       />
 
       {/* ส่วนแสดงผลรายการอาหาร */}
-      {menus.length === 0 ? (
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="bg-white rounded-xl shadow p-4 border border-gray-100 animate-pulse"
+            >
+              <div className="w-full h-40 bg-gray-200 rounded-lg" />
+              <div className="h-4 bg-gray-200 rounded mt-3 w-3/4" />
+              <div className="h-4 bg-gray-200 rounded mt-2 w-1/2" />
+            </div>
+          ))}
+        </div>
+      ) : menus.length === 0 ? (
         <p className="text-center text-gray-500 py-10">ยังไม่มีเมนูอาหารในระบบ</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">

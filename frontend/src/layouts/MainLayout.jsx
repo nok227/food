@@ -1,28 +1,49 @@
-import { Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import Header from "../components/Header";
 import Nav from "../components/Nav";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
+import TabsBar from "../components/TabsBar";
 
-// 🟢 โครงหลักของหน้าเว็บ (Layout) ที่ทุกหน้าจะใช้ร่วมกัน
+// 🟢 โครงหลักของหน้าเว็บ ทุกหน้าจะใช้ร่วมกัน
 // <Outlet /> คือจุดที่เนื้อหาของแต่ละ Route (Content) จะถูกดึงมาแสดง
+//
+// การเลื่อน (scroll):
+// - นอกสุด h-screen + overflow-hidden -> ตัวหน้าเว็บทั้งหน้าไม่เลื่อน
+// - Header, Nav, TabsBar, Sidebar อยู่นิ่งกับที่เสมอ
+// - เฉพาะฝั่งขวา (Content + Footer) เท่านั้นที่เลื่อนได้ (overflow-y-auto)
+//
+// มือถือ: Sidebar กลายเป็นเมนูเลื่อนออก เปิด/ปิดด้วยปุ่มแฮมเบอร์เกอร์ใน Header
 function MainLayout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
+
+  // ปิดเมนูมือถืออัตโนมัติทุกครั้งที่เปลี่ยนหน้า
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
+
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header />
+    <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
+      <Header onMenuClick={() => setSidebarOpen(true)} />
+      <TabsBar />
       <Nav />
 
-      <div className="flex flex-1">
-        <Sidebar />
+      <div className="flex flex-1 min-h-0">
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        <main className="flex-1 p-8">
-          <div className="max-w-6xl mx-auto">
-            <Outlet />
-          </div>
-        </main>
+        {/* ฝั่งขวา: มีแต่ Content + Footer ที่เลื่อนได้ */}
+        <div className="flex-1 flex flex-col overflow-y-auto">
+          <main className="flex-1 p-4 sm:p-8">
+            <div className="max-w-6xl mx-auto">
+              <Outlet />
+            </div>
+          </main>
+
+          <Footer />
+        </div>
       </div>
-
-      <Footer />
     </div>
   );
 }
