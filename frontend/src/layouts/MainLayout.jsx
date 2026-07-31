@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { Outlet } from "react-router-dom";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
@@ -14,15 +14,9 @@ import TabsBar from "../components/TabsBar";
 // - เฉพาะฝั่งขวา (Content + Footer) เท่านั้นที่เลื่อนได้ (overflow-y-auto)
 //
 // Nav บนถูกซ่อนไปแล้ว (ทุกขนาดจอ) — ใช้ Sidebar เป็นเมนูหลักแทน
-// เปิด/ปิด Sidebar ด้วยปุ่มแฮมเบอร์เกอร์ใน Header ได้ทุกขนาดจอ (toggle)
+// Sidebar เปิดเป็น default ตั้งแต่แรก กดปุ่มแฮมเบอร์เกอร์ใน Header เพื่อ toggle ซ่อน/แสดง
 function MainLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const location = useLocation();
-
-  // ปิดเมนูอัตโนมัติทุกครั้งที่เปลี่ยนหน้า
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, [location.pathname]);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
