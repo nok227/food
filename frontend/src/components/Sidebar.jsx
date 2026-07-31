@@ -1,25 +1,18 @@
 import { NavLink } from "react-router-dom";
 import { navItems } from "../data/navItems";
 
-// 🟢 Sidebar: เมนูหลักเดียวของเว็บ (แทน Nav บนที่ถูกซ่อนไปแล้ว)
-// ทำงานเป็นเมนูแบบเลื่อนออกจากซ้าย (drawer) เหมือนกันทุกขนาดจอ
-// เปิด/ปิดผ่านปุ่มแฮมเบอร์เกอร์ใน Header (props open/onClose)
+// 🟢 Sidebar แบบ "ดันเนื้อหา" (push) ไม่ใช่ลอยทับแบบ overlay
+// เป็น flex item ปกติในเลย์เอาต์ -> ตอนเปิด/ปิดแค่เปลี่ยนความกว้าง (w-64 <-> w-0)
+// เนื้อหาฝั่งขวา (Content/Footer) จะขยับตามอัตโนมัติเพราะมี flex-1 อยู่แล้ว
 function Sidebar({ open, onClose }) {
   return (
-    <>
-      {/* ฉากหลังสีดำโปร่งตอนเปิดเมนู กดเพื่อปิด (แสดงทุกขนาดจอ) */}
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/40 z-30"
-          onClick={onClose}
-        />
-      )}
-
-      <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 p-5 overflow-y-auto
-        transform transition-transform duration-200
-        ${open ? "translate-x-0" : "-translate-x-full"}`}
-      >
+    <aside
+      className={`shrink-0 bg-white border-r border-gray-200 overflow-y-auto overflow-x-hidden
+      transition-all duration-200 ${open ? "w-64" : "w-0"}`}
+    >
+      {/* กำหนดความกว้างคงที่ของเนื้อหาข้างในไว้ที่ w-64 เสมอ
+          กัน text ห่อ/บีบเบี้ยวระหว่างที่ aside กำลังเปลี่ยนความกว้าง */}
+      <div className="w-64 p-5">
         <div className="flex items-center justify-between mb-4">
           <span className="text-sm font-bold text-gray-500 uppercase tracking-wide">
             เมนู
@@ -40,9 +33,8 @@ function Sidebar({ open, onClose }) {
               key={item.path}
               to={item.path}
               end={item.path === "/"}
-              onClick={onClose}
               className={({ isActive }) =>
-                `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition ${
+                `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap ${
                   isActive
                     ? "bg-amber-50 text-amber-700"
                     : "text-gray-600 hover:bg-gray-100"
@@ -54,8 +46,8 @@ function Sidebar({ open, onClose }) {
             </NavLink>
           ))}
         </nav>
-      </aside>
-    </>
+      </div>
+    </aside>
   );
 }
 
