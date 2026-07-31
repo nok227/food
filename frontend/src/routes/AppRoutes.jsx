@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { RecentTabsProvider } from "../context/RecentTabsContext";
 import MainLayout from "../layouts/MainLayout";
 import HomePage from "../pages/HomePage";
 import NotFoundPage from "../pages/NotFoundPage";
@@ -8,16 +9,14 @@ import NotFoundPage from "../pages/NotFoundPage";
 function AppRoutes() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<HomePage />} />
-          {/* ตัวอย่างการเพิ่มหน้าใหม่ในอนาคต
-          <Route path="orders" element={<OrdersPage />} />
-          <Route path="about" element={<AboutPage />} />
-          */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Route>
-      </Routes>
+      <RecentTabsProvider>
+        <Routes>
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<HomePage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
+        </Routes>
+      </RecentTabsProvider>
     </BrowserRouter>
   );
 }
