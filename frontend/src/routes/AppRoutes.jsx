@@ -5,6 +5,7 @@ import LoadingPage from "../components/LoadingPage";
 import { RecentTabsProvider } from "../context/RecentTabsContext";
 
 // 🟢 โหลดแต่ละหน้าแบบ lazy -> ได้เห็น LoadingPage จริงๆ ตอนสลับหน้า (code splitting)
+const DashboardPage = lazy(() => import("../admin/Dashboard"));
 const HomePage = lazy(() => import("../pages/HomePage"));
 const OrdersPage = lazy(() => import("../pages/OrdersPage"));
 const AboutPage = lazy(() => import("../pages/AboutPage"));
@@ -22,6 +23,14 @@ function AppRoutes() {
           <Route path="/" element={<MainLayout />}>
             <Route
               index
+              element={
+                <Suspense fallback={<LoadingPage />}>
+                  <DashboardPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/homepage"
               element={
                 <Suspense fallback={<LoadingPage />}>
                   <HomePage />
