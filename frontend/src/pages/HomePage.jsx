@@ -22,6 +22,9 @@ function HomePage() {
   const [editingMenu, setEditingMenu] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // 🟢 State สำหรับเปิด-ปิด (ซ่อน/แสดง) ฟอร์มบันทึกข้อมูล
+  const [showForm, setShowForm] = useState(false);
+
   // 🟢 ดึงข้อมูลเมนูทั้งหมด
   const loadMenus = useCallback(async () => {
     try {
@@ -81,6 +84,12 @@ function HomePage() {
     }
   };
 
+  // เมื่อกดปุ่ม "แก้ไข" จากการ์ดเมนู
+  const handleEditClick = (menu) => {
+    setEditingMenu(menu);
+    setShowForm(true); // เปิดฟอร์มทันทีเมื่อกดแก้ไข
+  };
+
   // ลบข้อมูลเมนู
   const handleDeleteMenu = async (id) => {
     if (window.confirm("คุณต้องการลบเมนูนี้ใช่หรือไม่?")) {
@@ -96,44 +105,92 @@ function HomePage() {
   };
 
   return (
-    <>
-      {/* ส่วนฟอร์มเพิ่ม/แก้ไข */}
-      <MenuForm
-        key={editingMenu ? editingMenu.id : "create"}
-        onSubmit={handleFormSubmit}
-        editData={editingMenu}
-        onCancel={() => setEditingMenu(null)}
-      />
+    <div className="p-2 sm:p-4">
+      {/* ส่วนหัว + ปุ่มกด + / ซ่อนฟอร์ม */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">จัดการรายการเมนูอาหาร</h1>
+        </div>
 
-      {/* ส่วนแสดงผลรายการอาหาร */}
-      {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="bg-white rounded-xl shadow p-4 border border-gray-100 animate-pulse"
-            >
-              <div className="w-full h-40 bg-gray-200 rounded-lg" />
-              <div className="h-4 bg-gray-200 rounded mt-3 w-3/4" />
-              <div className="h-4 bg-gray-200 rounded mt-2 w-1/2" />
-            </div>
-          ))}
-        </div>
-      ) : menus.length === 0 ? (
-        <p className="text-center text-gray-500 py-10">ยังไม่มีเมนูอาหารในระบบ</p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {menus.map((menu, index) => (
-            <MenuCard
-              key={menu?.id || index}
-              menu={menu}
-              onEdit={setEditingMenu}
-              onDelete={handleDeleteMenu}
+        {/* ปุ่มเปิด-ปิดฟอร์ม */}
+        <button
+          onClick={() => {
+            setShowForm((prev) => !prev);
+            if (showForm) setEditingMenu(null); // เมื่อซ่อนฟอร์ม ให้เคลียร์ข้อมูลค้างแก้ไข
+          }}
+          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl font-medium transition shadow-sm cursor-pointer"
+        >
+          {showForm ? (
+            <>
+              <span className="text-lg">✕</span>
+              <span>ซ่อนฟอร์ม</span>
+            </>
+          ) : (
+            <>
+              <span className="text-xl font-bold">+</span>
+              <span>เพิ่มเมนูอาหาร</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* 
+        Layout Container:
+        - จอใหญ่ (lg ขึ้นไป): flex-row -> ฟอร์มอยู่ซ้ายสุด, รายการบันทึกอยู่ขวา
+        - จอเล็ก (sm/md): flex-col -> ฟอร์มอยู่บน, รายการบันทึกอยู่ล่าง
+      */}
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        
+        {/* 🟢 ส่วนฟอร์มบันทึกข้อมูล (ฝั่งซ้ายสุด / ด้านบนบนจอเล็ก) */}
+        {showForm && (
+          <div className="w-full lg:w-96 shrink-0 transition-all duration-300">
+            <MenuForm
+              key={editingMenu ? editingMenu.id : "create"}
+              onSubmit={handleFormSubmit}
+              editData={editingMenu}
+              onCancel={() => {
+                setEditingMenu(null);
+                setShowForm(false);
+              }}
             />
-          ))}
+          </div>
+        )}
+
+        {/* 🔵 ส่วนแสดงผลรายการอาหาร (ฝั่งขวา / ขยายเต็มอัตโนมัติเมื่อซ่อนฟอร์ม) */}
+        <div className="flex-1 w-full">
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-xl shadow p-4 border border-gray-100 animate-pulse"
+                >
+                  <div className="w-full h-40 bg-gray-200 rounded-lg" />
+                  <div className="h-4 bg-gray-200 rounded mt-3 w-3/4" />
+                  <div className="h-4 bg-gray-200 rounded mt-2 w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : menus.length === 0 ? (
+            <div className="bg-white rounded-xl p-10 text-center text-gray-500 border border-gray-200">
+              ยังไม่มีเมนูอาหารในระบบ กดปุ่ม <span className="font-semibold text-amber-600">"+ เพิ่มเมนูอาหาร"</span> เพื่อเพิ่มรายการ
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              {menus.map((menu, index) => (
+                <MenuCard
+                  key={menu?.id || index}
+                  menu={menu}
+                  onEdit={handleEditClick}
+                  onDelete={handleDeleteMenu}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      )}
-    </>
+
+      </div>
+    </div>
   );
 }
 
