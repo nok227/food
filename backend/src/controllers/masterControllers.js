@@ -58,29 +58,32 @@ exports.deleteSize = catchAsync(async (req, res) => {
 
 // ================= UNIT =================
 exports.getUnits = catchAsync(async (req, res) => {
-  const { categoryId } = req.query;
-  const where = categoryId ? { categoryId: Number(categoryId) } : {};
+  const { categoryId, sizeId } = req.query;
+  const where = {};
+  if (categoryId) where.categoryId = Number(categoryId);
+  if (sizeId) where.sizeId = Number(sizeId);
 
   const data = await prisma.unit.findMany({
     where,
-    include: { category: true }, // 🟢 ดึงข้อมูล Category มาด้วย
+    include: { category: true, size: true }, // 🟢 ດຶງຂໍ້ມູນ Category ແລະ Size ມາພ້ອມ
     orderBy: { id: "desc" },
   });
   res.json(data);
 });
 
 exports.createUnit = catchAsync(async (req, res) => {
-  const { name, categoryId } = req.body;
+  const { name, categoryId, sizeId } = req.body;
   if (!name || !name.trim()) {
-    return res.status(400).json({ error: "กະລຸນາປ້ອນຊື່ໜ່ວຍ" });
+    return res.status(400).json({ error: "ກະລຸນາປ້ອນຊື່ໜ່ວຍ" });
   }
 
   const result = await prisma.unit.create({
     data: {
       name: name.trim(),
       categoryId: categoryId ? Number(categoryId) : null,
+      sizeId: sizeId ? Number(sizeId) : null,
     },
-    include: { category: true },
+    include: { category: true, size: true },
   });
   res.json(result);
 });
