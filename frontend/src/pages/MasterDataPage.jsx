@@ -104,41 +104,52 @@ function MasterDataPage() {
     };
 
     // 5. Submit บันทึกข้อมูล
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (activeTab !== "stock" && !inputName.trim()) return;
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-        setSubmitting(true);
-        try {
-            if (activeTab === "material") {
-                await masterAPI.createMaterial(inputName);
-                loadMaterials();
-            } else if (activeTab === "category") {
-                await masterAPI.createCategory(inputName, selectedMaterial);
-            } else if (activeTab === "size") {
-                await masterAPI.createSize(inputName, selectedCategory);
-            } else if (activeTab === "unit") {
-                await masterAPI.createUnit(inputName, selectedCategory, selectedSize);
-            } else if (activeTab === "stock") {
-                // 🟢 สร้างรายการ Stock
-                await stockAPI.createStock({
-                    materialId: selectedMaterial,
-                    categoryId: selectedCategory,
-                    sizeId: selectedSize,
-                    unitId: selectedUnit,
-                    initialQuantity: parseFloat(initialQuantity) || 0,
-                });
-            }
+  // เช็คแยกตาม Tab
+  if (activeTab !== "stock" && !inputName.trim()) return;
 
-            resetForm();
-            setShowForm(false);
-            fetchTabData();
-        } catch (err) {
-            alert("ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກ");
-        } finally {
-            setSubmitting(false);
-        }
-    };
+  if (activeTab === "stock") {
+    if (!selectedMaterial || !selectedCategory || !selectedUnit) {
+      alert("ກະລຸນາເລືອກ ວັດຖຸດິບ, ປະເພດ, ແລະ ໜ່ວຍ ໃຫ້ຄົບຖ້ວນ");
+      return;
+    }
+  }
+
+  setSubmitting(true);
+  try {
+    if (activeTab === "material") {
+      await masterAPI.createMaterial(inputName);
+      loadMaterials();
+    } else if (activeTab === "category") {
+      await masterAPI.createCategory(inputName, selectedMaterial);
+    } else if (activeTab === "size") {
+      await masterAPI.createSize(inputName, selectedCategory);
+    } else if (activeTab === "unit") {
+      await masterAPI.createUnit(inputName, selectedCategory, selectedSize);
+    } else if (activeTab === "stock") {
+      await stockAPI.createStock({
+        materialId: selectedMaterial,
+        categoryId: selectedCategory,
+        sizeId: selectedSize || null,
+        unitId: selectedUnit,
+        initialQuantity: parseFloat(initialQuantity) || 0,
+      });
+    }
+
+    resetForm();
+    setShowForm(false);
+    fetchTabData();
+  } catch (err) {
+    console.error("Save Error:", err);
+    // 🟢 แสดง Error จริงที่ตอบกลับมาจาก Server เพื่อวิเคราะห์ได้ง่ายขึ้น
+    const errorMsg = err.response?.data?.error || "ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກ";
+    alert(errorMsg);
+  } finally {
+    setSubmitting(false);
+  }
+};
 
     const handleDelete = async (id) => {
         if (!confirm("ທ່ານຕ້ອງການລົບລາຍການນີ້ແມ່ນບໍ່?")) return;

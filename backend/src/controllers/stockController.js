@@ -41,19 +41,34 @@ exports.createStock = async (req, res, next) => {
   try {
     const { materialId, categoryId, sizeId, unitId, initialQuantity } = req.body;
 
+    // แปลงค่าเป็น Number หรือ null ถ้าไม่มีการส่งมา
+    const parsedMaterialId = materialId ? Number(materialId) : null;
+    const parsedCategoryId = categoryId ? Number(categoryId) : null;
+    const parsedSizeId = sizeId ? Number(sizeId) : null;
+    const parsedUnitId = unitId ? Number(unitId) : null;
+    const parsedQuantity = initialQuantity ? Number(initialQuantity) : 0;
+
+    // สร้างรายการ Stock
     const newStock = await prisma.stock.create({
       data: {
-        materialId: materialId ? Number(materialId) : null,
-        categoryId: categoryId ? Number(categoryId) : null,
-        sizeId: sizeId ? Number(sizeId) : null,
-        unitId: unitId ? Number(unitId) : null,
-        quantity: initialQuantity ? Number(initialQuantity) : 0,
+        materialId: parsedMaterialId,
+        categoryId: parsedCategoryId,
+        sizeId: parsedSizeId,
+        unitId: parsedUnitId,
+        quantity: parsedQuantity,
       },
+      include: {
+        material: true,
+        category: true,
+        size: true,
+        unit: true,
+      }
     });
 
     res.status(201).json(newStock);
   } catch (error) {
-    next(error);
+    console.error("Error creating stock:", error);
+    res.status(500).json({ error: error.message || "Cannot create stock" });
   }
 };
 
