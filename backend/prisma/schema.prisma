@@ -12,22 +12,30 @@ model Category {
   createdAt DateTime @default(now())
 
   menus     Menu[]
+  sizes     Size[]   // 🟢 เติม Relation ไปยัง Size
+  units     Unit[]   // 🟢 เติม Relation ไปยัง Unit
 }
 
 model Size {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  createdAt DateTime @default(now())
+  id         Int       @id @default(autoincrement())
+  name       String
+  createdAt  DateTime  @default(now())
 
-  menus     Menu[]
+  categoryId Int?      // 🟢 FK เชื่อม Category
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  menus      Menu[]
 }
 
 model Unit {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  createdAt DateTime @default(now())
+  id         Int       @id @default(autoincrement())
+  name       String
+  createdAt  DateTime  @default(now())
 
-  menus     Menu[]
+  categoryId Int?      // 🟢 FK เชื่อม Category
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  menus      Menu[]
 }
 
 model Menu {

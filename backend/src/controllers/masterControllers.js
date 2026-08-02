@@ -11,7 +11,7 @@ exports.getCategories = catchAsync(async (req, res) => {
 exports.createCategory = catchAsync(async (req, res) => {
   const { name } = req.body;
   if (!name || !name.trim()) {
-    return res.status(400).json({ error: "ກະລຸນາປ້ອນຊື່ປະເພດ" });
+    return res.status(400).json({ error: "กะລຸນາປ້ອນຊື່ປະເພດ" });
   }
   const result = await prisma.category.create({ data: { name: name.trim() } });
   res.json(result);
@@ -24,16 +24,30 @@ exports.deleteCategory = catchAsync(async (req, res) => {
 
 // ================= SIZE =================
 exports.getSizes = catchAsync(async (req, res) => {
-  const data = await prisma.size.findMany({ orderBy: { id: "desc" } });
+  const { categoryId } = req.query;
+  const where = categoryId ? { categoryId: Number(categoryId) } : {};
+
+  const data = await prisma.size.findMany({
+    where,
+    include: { category: true }, // 🟢 ดึงข้อมูล Category มาด้วย
+    orderBy: { id: "desc" },
+  });
   res.json(data);
 });
 
 exports.createSize = catchAsync(async (req, res) => {
-  const { name } = req.body;
+  const { name, categoryId } = req.body;
   if (!name || !name.trim()) {
-    return res.status(400).json({ error: "ກະລຸນາປ້ອນຊື່ຂະໜາດ" });
+    return res.status(400).json({ error: "กະລຸນາປ້ອນຊື່ຂະໜາດ" });
   }
-  const result = await prisma.size.create({ data: { name: name.trim() } });
+
+  const result = await prisma.size.create({
+    data: {
+      name: name.trim(),
+      categoryId: categoryId ? Number(categoryId) : null,
+    },
+    include: { category: true },
+  });
   res.json(result);
 });
 
@@ -44,16 +58,30 @@ exports.deleteSize = catchAsync(async (req, res) => {
 
 // ================= UNIT =================
 exports.getUnits = catchAsync(async (req, res) => {
-  const data = await prisma.unit.findMany({ orderBy: { id: "desc" } });
+  const { categoryId } = req.query;
+  const where = categoryId ? { categoryId: Number(categoryId) } : {};
+
+  const data = await prisma.unit.findMany({
+    where,
+    include: { category: true }, // 🟢 ดึงข้อมูล Category มาด้วย
+    orderBy: { id: "desc" },
+  });
   res.json(data);
 });
 
 exports.createUnit = catchAsync(async (req, res) => {
-  const { name } = req.body;
+  const { name, categoryId } = req.body;
   if (!name || !name.trim()) {
-    return res.status(400).json({ error: "ກະລຸນາປ້ອນຊື່ໜ່ວຍ" });
+    return res.status(400).json({ error: "กະລຸນາປ້ອນຊື່ໜ່ວຍ" });
   }
-  const result = await prisma.unit.create({ data: { name: name.trim() } });
+
+  const result = await prisma.unit.create({
+    data: {
+      name: name.trim(),
+      categoryId: categoryId ? Number(categoryId) : null,
+    },
+    include: { category: true },
+  });
   res.json(result);
 });
 
