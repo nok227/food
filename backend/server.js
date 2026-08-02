@@ -7,40 +7,40 @@ const { Server } = require("socket.io");
 
 const menuRoutes = require("./src/routes/menuRoutes");
 const masterRoutes = require("./src/routes/masterRoutes");
+const stockRoutes = require("./src/routes/stockRoutes");
 const { globalErrorHandler } = require("./src/middleware/errorHandler");
 
 const app = express();
 const server = http.createServer(app);
 
-// 🟢 บอกให้ Express เชื่อถือ Proxy ของ Render (ป้องกันการหลุดเชื่อมต่อของ Socket)
+// 🟢 บอกให้ Express เชื่อถือ Proxy ของ Render
 app.enable("trust proxy");
 
 // 🟢 1. ตั้งค่า CORS
 app.use(
   cors({
     origin: true,
-    credentials: true
+    credentials: true,
   })
 );
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
-// 🟢 2. ตั้งค่า Socket.IO ให้เสถียรบน Render
+// 🟢 2. ตั้งค่า Socket.IO
 const io = new Server(server, {
   cors: {
     origin: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
+    credentials: true,
   },
   transports: ["polling", "websocket"],
   allowEIO3: true,
-  pingTimeout: 30000,      // ปรับลดลงมาเพื่อให้ Detect สายหลุดได้ไวขึ้น
-  pingInterval: 10000,     // ส่ง Ping ทุกๆ 10 วินาที ป้องกัน Render ตัดสาย
-  perMessageDeflate: false // 🟢 ปิดการบีบอัดข้อมูล ป้องกัน Proxy ของ Render ทำสายหลุด
+  pingTimeout: 30000,
+  pingInterval: 10000,
+  perMessageDeflate: false,
 });
 
-// แชร์ตัวแปร io เข้าไปใน Express App
 app.set("io", io);
 
 io.on("connection", (socket) => {
@@ -56,7 +56,7 @@ app.get("/health", (req, res) => {
   res.json({
     status: "OK",
     timestamp: new Date().toISOString(),
-    uptime: `${Math.floor(process.uptime())}s`
+    uptime: `${Math.floor(process.uptime())}s`,
   });
 });
 
@@ -67,6 +67,7 @@ app.get("/", (req, res) => {
 // 🟢 4. Routes หลักของ API
 app.use("/menus", menuRoutes);
 app.use("/api/master", masterRoutes);
+app.use("/api/stocks", stockRoutes);
 
 // 🟢 5. 404 Handler
 app.use((req, res, next) => {

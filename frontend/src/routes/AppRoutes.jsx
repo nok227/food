@@ -1,16 +1,17 @@
 import { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-import LoadingPage from "../components/LoadingPage"; //[cite: 16]
-import { RecentTabsProvider } from "../context/RecentTabsContext"; //[cite: 13]
+import LoadingPage from "../components/LoadingPage";
+import { RecentTabsProvider } from "../context/RecentTabsContext";
 
-// 🟢 1. ໂຫລດທຸກໜ້າແບບ lazy (รวมถึง MasterDataPage)
+// 🟢 Lazy Load หน้าต่างๆ
 const DashboardPage = lazy(() => import("../admin/Dashboard"));
 const MasterDataPage = lazy(() => import("../pages/MasterDataPage"));
+const StockPage = lazy(() => import("../pages/StockPage")); // 🟢 เพิ่มหน้า StockPage
 const HomePage = lazy(() => import("../pages/HomePage"));
 const OrdersPage = lazy(() => import("../pages/OrdersPage"));
-const AboutPage = lazy(() => import("../pages/AboutPage")); //[cite: 9]
-const ContactPage = lazy(() => import("../pages/ContactPage")); //[cite: 10]
+const AboutPage = lazy(() => import("../pages/AboutPage"));
+const ContactPage = lazy(() => import("../pages/ContactPage"));
 const NotFoundPage = lazy(() => import("../pages/NotFoundPage"));
 
 function AppRoutes() {
@@ -19,7 +20,7 @@ function AppRoutes() {
       <RecentTabsProvider>
         <Routes>
           <Route path="/" element={<MainLayout />}>
-            {/* หน้าหลัก Dashboard */}
+            {/* Dashboard */}
             <Route
               index
               element={
@@ -29,7 +30,7 @@ function AppRoutes() {
               }
             />
 
-            {/* 🟢 ຈັດການຂໍ້ມູນ (Master Data) */}
+            {/* Master Data */}
             <Route
               path="/master-data"
               element={
@@ -39,7 +40,17 @@ function AppRoutes() {
               }
             />
 
-            {/* ບັນທຶກເມນູ */}
+            {/* 🟢 จัดการสต็อก (Stock Management) */}
+            <Route
+              path="/stock"
+              element={
+                <Suspense fallback={<LoadingPage />}>
+                  <StockPage />
+                </Suspense>
+              }
+            />
+
+            {/* บันทึกเมนู */}
             <Route
               path="/homepage"
               element={
@@ -49,7 +60,7 @@ function AppRoutes() {
               }
             />
 
-            {/* ຈັດການອໍເດີ */}
+            {/* จัดการออเดอร์ */}
             <Route
               path="/orders"
               element={
@@ -59,7 +70,7 @@ function AppRoutes() {
               }
             />
 
-            {/* ລາຍງານຂໍ້ມູນ */}
+            {/* รายงานข้อมูล */}
             <Route
               path="/about"
               element={
@@ -69,7 +80,7 @@ function AppRoutes() {
               }
             />
 
-            {/* ຕິດຕໍ່ເຮົາ */}
+            {/* ติดต่อเรา */}
             <Route
               path="/contact"
               element={
@@ -79,7 +90,7 @@ function AppRoutes() {
               }
             />
 
-            {/* หน้า 404 */}
+            {/* Page Not Found */}
             <Route
               path="*"
               element={
