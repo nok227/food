@@ -6,6 +6,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 
 const menuRoutes = require("./src/routes/menuRoutes");
+const masterRoutes = require("./src/routes/masterRoutes");
 const { globalErrorHandler } = require("./src/middleware/errorHandler");
 
 const app = express();
@@ -65,6 +66,7 @@ app.get("/", (req, res) => {
 
 // 🟢 4. Routes หลักของ API
 app.use("/menus", menuRoutes);
+app.use("/api/master", masterRoutes);
 
 // 🟢 5. 404 Handler
 app.use((req, res, next) => {

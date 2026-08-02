@@ -6,12 +6,46 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Menu {
+model Category {
   id        Int      @id @default(autoincrement())
-  name      String
-  price     Float
-  imageUrl  String?
+  name      String   @unique
   createdAt DateTime @default(now())
+
+  menus     Menu[]
+}
+
+model Size {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  menus     Menu[]
+}
+
+model Unit {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  menus     Menu[]
+}
+
+model Menu {
+  id          Int      @id @default(autoincrement())
+  name        String
+  price       Float
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+
+  // Foreign Keys
+  categoryId  Int?
+  sizeId      Int?
+  unitId      Int?
+
+  // Relations
+  category    Category? @relation(fields: [categoryId], references: [id])
+  size        Size?     @relation(fields: [sizeId], references: [id])
+  unit        Unit?     @relation(fields: [unitId], references: [id])
 }
 
 model Order {

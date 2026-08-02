@@ -1,9 +1,9 @@
-// 🟢 รายการเมนูหลักของเว็บ ใช้ร่วมกันทั้ง Nav (บน), Sidebar (มือถือ) และ Footer
-// เพิ่มหน้าใหม่ในอนาคต แค่เพิ่ม object ในนี้ที่เดียว ไม่ต้องไปแก้หลายไฟล์
+// frontend/src/data/navItems.js
 export const navItems = [
   { path: "/", label: "ໜ້າຫຼັກ", icon: "🍜" },
+  { path: "/orders", label: "ຈັດການອໍເດີ", icon: "🧾" }, // ເມນູທີສອງ
   { path: "/homepage", label: "ບັນທຶກເມນູ", icon: "🍜" },
-  { path: "/orders", label: "ບັນທຶກຂໍ້ມູນ", icon: "🧾" },
+  { path: "/master-data", label: "ຈັດການຂໍ້ມູນ", icon: "⚙️" }, // ຈັດການຂໍ້ມູນ (Category, Size, Unit)
   { path: "/about", label: "ລາຍງານຂໍ້ມູນ", icon: "ℹ️" },
   { path: "/contact", label: "ติดต่อเรา", icon: "✉️" },
 ];

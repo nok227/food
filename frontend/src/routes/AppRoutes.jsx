@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import LoadingPage from "../components/LoadingPage";
 import { RecentTabsProvider } from "../context/RecentTabsContext";
+import MasterDataPage from "../pages/MasterDataPage";
 
 // 🟢 โหลดแต่ละหน้าแบบ lazy -> ได้เห็น LoadingPage จริงๆ ตอนสลับหน้า (code splitting)
 const DashboardPage = lazy(() => import("../admin/Dashboard"));
@@ -29,6 +30,7 @@ function AppRoutes() {
                 </Suspense>
               }
             />
+            <Route path="/master-data" element={<MasterDataPage />} />
             <Route
               path="/homepage"
               element={
