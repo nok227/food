@@ -6,14 +6,25 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Category {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  createdAt DateTime @default(now())
+model Material {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  createdAt DateTime   @default(now())
 
-  menus     Menu[]
-  sizes     Size[]
-  units     Unit[]
+  categories Category[]
+}
+
+model Category {
+  id         Int       @id @default(autoincrement())
+  name       String
+  createdAt  DateTime  @default(now())
+
+  materialId Int?      // FK ເຊື່ອມ Material
+  material   Material? @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  sizes      Size[]
+  units      Unit[]
+  menus      Menu[]    // 🟢 ເພີ່ມ Relation ຂາກັບຫາ Menu
 }
 
 model Size {
@@ -21,11 +32,11 @@ model Size {
   name       String
   createdAt  DateTime  @default(now())
 
-  categoryId Int?
+  categoryId Int?      // FK ເຊື່ອມ Category
   category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
-  units      Unit[]    // 🟢 ເພີ່ມ Relation ໄປຫາ Unit
-  menus      Menu[]
+  units      Unit[]
+  menus      Menu[]    // 🟢 ເພີ່ມ Relation ຂາກັບຫາ Menu
 }
 
 model Unit {
@@ -33,21 +44,21 @@ model Unit {
   name       String
   createdAt  DateTime  @default(now())
 
-  categoryId Int?
+  categoryId Int?      // FK ເຊື່ອມ Category
   category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
-  sizeId     Int?      // 🟢 ເພີ່ມ FK ເຊື່ອມຫາ Size
+  sizeId     Int?      // FK ເຊື່ອມ Size
   size       Size?     @relation(fields: [sizeId], references: [id], onDelete: Cascade)
 
-  menus      Menu[]
+  menus      Menu[]    // 🟢 ເພີ່ມ Relation ຂາກັບຫາ Menu
 }
 
 model Menu {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   name        String
   price       Float
   imageUrl    String?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
   // Foreign Keys
   categoryId  Int?

@@ -3,57 +3,62 @@ import { useState, useEffect } from "react";
 import { masterAPI } from "../services/masterApi";
 
 function MasterDataPage() {
-  const [activeTab, setActiveTab] = useState("category"); // 'category' | 'size' | 'unit'
-  const [categories, setCategories] = useState([]);
-  const [availableSizes, setAvailableSizes] = useState([]); // ຂະໜາດທີ່ດຶງຕາມ Category
+  const [activeTab, setActiveTab] = useState("material"); // 'material' | 'category' | 'size' | 'unit'
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
-  // Filter States
-  const [filterCategory, setFilterCategory] = useState("");
-  const [filterSize, setFilterSize] = useState("");
+  // Master Lists สำหรับ Dropdown ในฟอร์ม
+  const [materials, setMaterials] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [availableSizes, setAvailableSizes] = useState([]);
 
-  // Form Input States
+  // Form Inputs
   const [inputName, setInputName] = useState("");
-  const [inputCategory, setInputCategory] = useState("");
-  const [inputSize, setInputSize] = useState("");
+  const [selectedMaterial, setSelectedMaterial] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedSize, setSelectedSize] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // 1. ໂຫລດ Category ທັງໝົດ
-  const fetchCategories = async () => {
-    try {
-      const data = await masterAPI.getCategories();
-      setCategories(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error(err);
-    }
+  // 1. โหลดข้อมูลวัตถุดิบทั้งหมด
+  const loadMaterials = async () => {
+    const data = await masterAPI.getMaterials();
+    setMaterials(Array.isArray(data) ? data : []);
   };
 
-  // 2. ເມື່ອมีการເລືອກ Category ໃນຟອມ -> ດຶງ Size ສະເພາະ Category ນັ້ນ
+  // 2. เมื่อเลือก Material ในฟอร์ม -> โหลด Category ของ Material นั้น
   useEffect(() => {
-    if (inputCategory) {
-      masterAPI.getSizes(inputCategory).then((data) => {
+    if (selectedMaterial) {
+      masterAPI.getCategories(selectedMaterial).then((data) => {
+        setCategories(Array.isArray(data) ? data : []);
+      });
+    } else {
+      setCategories([]);
+      setSelectedCategory("");
+    }
+  }, [selectedMaterial]);
+
+  // 3. เมื่อเลือก Category ในฟอร์ม -> โหลด Size ของ Category นั้น
+  useEffect(() => {
+    if (selectedCategory) {
+      masterAPI.getSizes(selectedCategory).then((data) => {
         setAvailableSizes(Array.isArray(data) ? data : []);
       });
     } else {
       setAvailableSizes([]);
-      setInputSize("");
+      setSelectedSize("");
     }
-  }, [inputCategory]);
+  }, [selectedCategory]);
 
-  // 3. ດຶງຂໍ້ມູນຕາມ Tab ທີ່ເລືອກ
+  // 4. โหลดข้อมูลของ Tab ที่เปิดอยู่
   const fetchTabData = async () => {
     setLoading(true);
     try {
       let data = [];
-      if (activeTab === "category") {
-        data = await masterAPI.getCategories();
-      } else if (activeTab === "size") {
-        data = await masterAPI.getSizes(filterCategory);
-      } else if (activeTab === "unit") {
-        data = await masterAPI.getUnits(filterCategory, filterSize);
-      }
+      if (activeTab === "material") data = await masterAPI.getMaterials();
+      else if (activeTab === "category") data = await masterAPI.getCategories();
+      else if (activeTab === "size") data = await masterAPI.getSizes();
+      else if (activeTab === "unit") data = await masterAPI.getUnits();
       setItems(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
@@ -63,39 +68,40 @@ function MasterDataPage() {
   };
 
   useEffect(() => {
-    fetchCategories();
+    loadMaterials();
   }, []);
 
   useEffect(() => {
     setShowForm(false);
-    setInputName("");
-    setInputCategory("");
-    setInputSize("");
+    resetForm();
     fetchTabData();
-  }, [activeTab, filterCategory, filterSize]);
+  }, [activeTab]);
 
-  // 4. ບັນທຶກຂໍ້ມູນ
+  const resetForm = () => {
+    setInputName("");
+    setSelectedMaterial("");
+    setSelectedCategory("");
+    setSelectedSize("");
+  };
+
+  // 5. Submit บันทึกข้อมูล
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!inputName.trim()) return;
     setSubmitting(true);
     try {
-      if (activeTab === "category") {
-        await masterAPI.createCategory(inputName);
-        fetchCategories();
+      if (activeTab === "material") {
+        await masterAPI.createMaterial(inputName);
+        loadMaterials();
+      } else if (activeTab === "category") {
+        await masterAPI.createCategory(inputName, selectedMaterial);
       } else if (activeTab === "size") {
-        await masterAPI.createSize(inputName, inputCategory || null);
+        await masterAPI.createSize(inputName, selectedCategory);
       } else if (activeTab === "unit") {
-        await masterAPI.createUnit(
-          inputName,
-          inputCategory || null,
-          inputSize || null
-        );
+        await masterAPI.createUnit(inputName, selectedCategory, selectedSize);
       }
 
-      setInputName("");
-      setInputCategory("");
-      setInputSize("");
+      resetForm();
       setShowForm(false);
       fetchTabData();
     } catch (err) {
@@ -108,14 +114,12 @@ function MasterDataPage() {
   const handleDelete = async (id) => {
     if (!confirm("ທ່ານຕ້ອງການລົບລາຍການນີ້ແມ່ນບໍ່?")) return;
     try {
-      if (activeTab === "category") {
-        await masterAPI.deleteCategory(id);
-        fetchCategories();
-      } else if (activeTab === "size") {
-        await masterAPI.deleteSize(id);
-      } else if (activeTab === "unit") {
-        await masterAPI.deleteUnit(id);
-      }
+      if (activeTab === "material") {
+        await masterAPI.deleteMaterial(id);
+        loadMaterials();
+      } else if (activeTab === "category") await masterAPI.deleteCategory(id);
+      else if (activeTab === "size") await masterAPI.deleteSize(id);
+      else if (activeTab === "unit") await masterAPI.deleteUnit(id);
       fetchTabData();
     } catch (err) {
       alert("ບໍ່ສາມາດລົບຂໍ້ມູນໄດ້");
@@ -123,66 +127,55 @@ function MasterDataPage() {
   };
 
   const getTabTitle = () => {
+    if (activeTab === "material") return "ຊື່ວັດຖຸດິບ";
     if (activeTab === "category") return "ປະເພດ";
     if (activeTab === "size") return "ຂະໜາດ";
     return "ໜ່ວຍ";
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-800">ຈັດການຂໍ້ມູນ</h2>
+    <div className="flex flex-col gap-6 max-w-5xl mx-auto">
+      <h2 className="text-2xl font-bold text-gray-800">ຈັດການຂໍ້ມູນ Master Data</h2>
 
-      {/* 🟢 Tabs */}
-      <div className="flex border-b border-gray-200">
+      {/* 🟢 1. Tabs Bar */}
+      <div className="flex border-b border-gray-200 overflow-x-auto">
         <button
-          onClick={() => {
-            setActiveTab("category");
-            setFilterCategory("");
-            setFilterSize("");
-          }}
-          className={`py-3 px-6 font-semibold text-sm transition border-b-2 ${
-            activeTab === "category"
-              ? "border-amber-500 text-amber-600"
-              : "border-transparent text-gray-500 hover:text-gray-700"
+          onClick={() => setActiveTab("material")}
+          className={`py-3 px-6 font-semibold text-sm whitespace-nowrap border-b-2 transition ${
+            activeTab === "material" ? "border-amber-500 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700"
           }`}
         >
-          🏷️ ປະເພດ (Category)
+          🥩 1. ຊື່ວັດຖຸດິບ (Material)
         </button>
         <button
-          onClick={() => {
-            setActiveTab("size");
-            setFilterCategory("");
-            setFilterSize("");
-          }}
-          className={`py-3 px-6 font-semibold text-sm transition border-b-2 ${
-            activeTab === "size"
-              ? "border-amber-500 text-amber-600"
-              : "border-transparent text-gray-500 hover:text-gray-700"
+          onClick={() => setActiveTab("category")}
+          className={`py-3 px-6 font-semibold text-sm whitespace-nowrap border-b-2 transition ${
+            activeTab === "category" ? "border-amber-500 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700"
           }`}
         >
-          📐 ຂະໜາດ (Size)
+          🏷️ 2. ປະເພດ (Category)
         </button>
         <button
-          onClick={() => {
-            setActiveTab("unit");
-            setFilterCategory("");
-            setFilterSize("");
-          }}
-          className={`py-3 px-6 font-semibold text-sm transition border-b-2 ${
-            activeTab === "unit"
-              ? "border-amber-500 text-amber-600"
-              : "border-transparent text-gray-500 hover:text-gray-700"
+          onClick={() => setActiveTab("size")}
+          className={`py-3 px-6 font-semibold text-sm whitespace-nowrap border-b-2 transition ${
+            activeTab === "size" ? "border-amber-500 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700"
           }`}
         >
-          📦 ໜ່ວຍ (Unit)
+          📐 3. ຂະໜາດ (Size)
+        </button>
+        <button
+          onClick={() => setActiveTab("unit")}
+          className={`py-3 px-6 font-semibold text-sm whitespace-nowrap border-b-2 transition ${
+            activeTab === "unit" ? "border-amber-500 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          📦 4. ໜ່ວຍ (Unit)
         </button>
       </div>
 
-      {/* 🟢 Header & Toggle Form Button */}
+      {/* 🟢 2. Action Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold text-gray-700">
-          ລາຍການ {getTabTitle()}
-        </h3>
+        <h3 className="text-lg font-bold text-gray-700">ລາຍການ {getTabTitle()}</h3>
         <button
           onClick={() => setShowForm(!showForm)}
           className="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-semibold hover:bg-amber-600 transition"
@@ -191,67 +184,91 @@ function MasterDataPage() {
         </button>
       </div>
 
-      {/* 🟢 ຟອມບັນທຶກຂໍ້ມູນ */}
+      {/* 🟢 3. Dynamic Form */}
       {showForm && (
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white p-5 rounded-xl border border-amber-200 shadow-sm flex flex-col gap-4"
-        >
+        <form onSubmit={handleSubmit} className="bg-white p-5 rounded-xl border border-amber-200 shadow-sm flex flex-col gap-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* 1. ເລືອກ Category (ສຳລັບ Size ແລະ Unit) */}
-            {activeTab !== "category" && (
+            
+            {/* Step 1: เลือก Material (แสดงตอนอยู่ Tab Category) */}
+            {activeTab === "category" && (
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-gray-600">
-                  1. ເລືອກປະເພດ
-                </label>
+                <label className="text-xs font-semibold text-gray-600">1. ເລືອກວັດຖຸດິບ</label>
                 <select
                   required
-                  value={inputCategory}
-                  onChange={(e) => setInputCategory(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  value={selectedMaterial}
+                  onChange={(e) => setSelectedMaterial(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400"
                 >
-                  <option value="">-- ເລືອກປະເພດ --</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
+                  <option value="">-- ເລືອກວັດຖຸດິບ --</option>
+                  {materials.map((m) => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
                   ))}
                 </select>
               </div>
             )}
 
-            {/* 2. ເລືອກ Size (ສະເພາະ Unit ເທົ່ານັ້ນ) */}
+            {/* Step 2: เลือก Material & Category (แสดงตอนอยู่ Tab Size หรือ Unit) */}
+            {(activeTab === "size" || activeTab === "unit") && (
+              <>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-gray-600">1. ເລືອກວັດຖຸດິບ</label>
+                  <select
+                    required
+                    value={selectedMaterial}
+                    onChange={(e) => setSelectedMaterial(e.target.value)}
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400"
+                  >
+                    <option value="">-- ເລືອກວັດຖຸດິບ --</option>
+                    {materials.map((m) => (
+                      <option key={m.id} value={m.id}>{m.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-gray-600">2. ເລືອກປະເພດ</label>
+                  <select
+                    required
+                    disabled={!selectedMaterial}
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 disabled:bg-gray-100"
+                  >
+                    <option value="">{!selectedMaterial ? "-- ເລືອກວັດຖຸດິບກ່ອນ --" : "-- ເລືອກປະເພດ --"}</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+
+            {/* Step 3: เลือก Size (แสดงเฉพาะตอนอยู่ Tab Unit) */}
             {activeTab === "unit" && (
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-gray-600">
-                  2. ເລືອກຂະໜາດ (ຖ້າມີ)
-                </label>
+                <label className="text-xs font-semibold text-gray-600">3. ເລືອກຂະໜາດ</label>
                 <select
-                  value={inputSize}
-                  onChange={(e) => setInputSize(e.target.value)}
-                  disabled={!inputCategory}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:bg-gray-100"
+                  required
+                  disabled={!selectedCategory}
+                  value={selectedSize}
+                  onChange={(e) => setSelectedSize(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 disabled:bg-gray-100"
                 >
-                  <option value="">
-                    {!inputCategory
-                      ? "-- ກະລຸນາເລືອກປະເພດກ່ອນ --"
-                      : "-- ເລືອກຂະໜາດ --"}
-                  </option>
+                  <option value="">{!selectedCategory ? "-- ເລືອກປະເພດກ່ອນ --" : "-- ເລືອກຂະໜາດ --"}</option>
                   {availableSizes.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
+                    <option key={s.id} value={s.id}>{s.name}</option>
                   ))}
                 </select>
               </div>
             )}
 
-            {/* 3. ປ້ອນຊື່ (Category / Size / Unit) */}
+            {/* Step Final: ช่องป้อนชื่อ Item */}
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-600">
-                {activeTab === "unit"
-                  ? "3. ຊື່ໜ່ວຍ (ເຊັ່ນ: ລັງ, ແກັດ)"
-                  : `ຊື່ ${getTabTitle()}`}
+                {activeTab === "material" && "ຊື່ວັດຖຸດິບ (ເຊັ່ນ: ເບຍ)"}
+                {activeTab === "category" && "ຊື່ປະເພດ (ເຊັ່ນ: ນ້ຳ)"}
+                {activeTab === "size" && "ຊື່ຂະໜາດ (ເຊັ່ນ: ໃຫຍ່, ກາງ, ນ້ອຍ)"}
+                {activeTab === "unit" && "ຊື່ໜ່ວຍ (ເຊັ່ນ: ລັງ, ແກັດ)"}
               </label>
               <input
                 type="text"
@@ -259,7 +276,7 @@ function MasterDataPage() {
                 value={inputName}
                 onChange={(e) => setInputName(e.target.value)}
                 placeholder={`ປ້ອນຊື່ ${getTabTitle()}...`}
-                className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-amber-400"
               />
             </div>
           </div>
@@ -274,22 +291,26 @@ function MasterDataPage() {
         </form>
       )}
 
-      {/* 🟢 ຕາຕະລາງສະແດງລາຍການ */}
+      {/* 🟢 4. Table Display */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-gray-400">ກໍາລັງໂຫລດຂໍ້ມູນ...</div>
         ) : items.length === 0 ? (
-          <div className="p-8 text-center text-gray-400">
-            ບໍ່ມີຂໍ້ມູນ {getTabTitle()}
-          </div>
+          <div className="p-8 text-center text-gray-400">ບໍ່ມີຂໍ້ມູນ {getTabTitle()}</div>
         ) : (
           <table className="w-full text-left text-sm text-gray-600">
             <thead className="bg-gray-50 border-b border-gray-200 text-gray-700 uppercase text-xs">
               <tr>
                 <th className="px-6 py-3">ID</th>
                 <th className="px-6 py-3">ຊື່ {getTabTitle()}</th>
-                {activeTab !== "category" && <th className="px-6 py-3">ປະເພດ</th>}
-                {activeTab === "unit" && <th className="px-6 py-3">ຂະໜາດ</th>}
+                {activeTab === "category" && <th className="px-6 py-3">ວັດຖຸດິບ</th>}
+                {activeTab === "size" && <th className="px-6 py-3">ປະເພດ</th>}
+                {activeTab === "unit" && (
+                  <>
+                    <th className="px-6 py-3">ປະເພດ</th>
+                    <th className="px-6 py-3">ຂະໜາດ</th>
+                  </>
+                )}
                 <th className="px-6 py-3 text-right">ຈັດການ</th>
               </tr>
             </thead>
@@ -298,33 +319,32 @@ function MasterDataPage() {
                 <tr key={item.id} className="hover:bg-gray-50 transition">
                   <td className="px-6 py-4 font-medium text-gray-900">{item.id}</td>
                   <td className="px-6 py-4 font-semibold text-gray-800">{item.name}</td>
-                  {activeTab !== "category" && (
+                  
+                  {activeTab === "category" && (
                     <td className="px-6 py-4">
-                      {item.category ? (
-                        <span className="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-medium">
-                          {item.category.name}
-                        </span>
-                      ) : (
-                        <span className="text-gray-400 text-xs">-</span>
-                      )}
+                      {item.material ? <span className="bg-purple-100 text-purple-800 text-xs px-2.5 py-1 rounded-full font-medium">{item.material.name}</span> : "-"}
                     </td>
                   )}
+
+                  {activeTab === "size" && (
+                    <td className="px-6 py-4">
+                      {item.category ? <span className="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-medium">{item.category.name}</span> : "-"}
+                    </td>
+                  )}
+
                   {activeTab === "unit" && (
-                    <td className="px-6 py-4">
-                      {item.size ? (
-                        <span className="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-medium">
-                          {item.size.name}
-                        </span>
-                      ) : (
-                        <span className="text-gray-400 text-xs">-</span>
-                      )}
-                    </td>
+                    <>
+                      <td className="px-6 py-4">
+                        {item.category ? <span className="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-medium">{item.category.name}</span> : "-"}
+                      </td>
+                      <td className="px-6 py-4">
+                        {item.size ? <span className="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-medium">{item.size.name}</span> : "-"}
+                      </td>
+                    </>
                   )}
+
                   <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="text-red-500 hover:text-red-700 font-medium transition"
-                    >
+                    <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:text-red-700 font-medium transition">
                       ລົບ
                     </button>
                   </td>
