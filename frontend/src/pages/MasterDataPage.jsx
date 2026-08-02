@@ -1,9 +1,10 @@
 // frontend/src/pages/MasterDataPage.jsx
 import { useState, useEffect } from "react";
 import { masterAPI } from "../services/masterApi";
+import { stockAPI } from "../services/stockApi"; // 🟢 นำเข้า stockAPI เพื่อสร้าง/ดึงข้อมูลสต็อก
 
 function MasterDataPage() {
-  const [activeTab, setActiveTab] = useState("material"); // 'material' | 'category' | 'size' | 'unit'
+  const [activeTab, setActiveTab] = useState("material"); // 'material' | 'category' | 'size' | 'unit' | 'stock'
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -12,12 +13,15 @@ function MasterDataPage() {
   const [materials, setMaterials] = useState([]);
   const [categories, setCategories] = useState([]);
   const [availableSizes, setAvailableSizes] = useState([]);
+  const [availableUnits, setAvailableUnits] = useState([]); // 🟢 เพิ่ม state หน่วย สำหรับ Tab Stock
 
   // Form Inputs
   const [inputName, setInputName] = useState("");
   const [selectedMaterial, setSelectedMaterial] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
+  const [selectedUnit, setSelectedUnit] = useState(""); // 🟢 เพิ่มสำหรับ Stock
+  const [initialQuantity, setInitialQuantity] = useState("0"); // 🟢 จำนวนเริ่มต้นของ Stock
   const [submitting, setSubmitting] = useState(false);
 
   // 1. โหลดข้อมูลวัตถุดิบทั้งหมด
@@ -50,6 +54,18 @@ function MasterDataPage() {
     }
   }, [selectedCategory]);
 
+  // 🟢 3.5 เมื่อเลือก Size (หรือ Category) -> โหลด Unit
+  useEffect(() => {
+    if (selectedCategory) {
+      masterAPI.getUnits(selectedCategory, selectedSize).then((data) => {
+        setAvailableUnits(Array.isArray(data) ? data : []);
+      });
+    } else {
+      setAvailableUnits([]);
+      setSelectedUnit("");
+    }
+  }, [selectedCategory, selectedSize]);
+
   // 4. โหลดข้อมูลของ Tab ที่เปิดอยู่
   const fetchTabData = async () => {
     setLoading(true);
@@ -59,6 +75,7 @@ function MasterDataPage() {
       else if (activeTab === "category") data = await masterAPI.getCategories();
       else if (activeTab === "size") data = await masterAPI.getSizes();
       else if (activeTab === "unit") data = await masterAPI.getUnits();
+      else if (activeTab === "stock") data = await stockAPI.getStocks(); // 🟢 ดึงข้อมูล Stock
       setItems(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
@@ -82,12 +99,15 @@ function MasterDataPage() {
     setSelectedMaterial("");
     setSelectedCategory("");
     setSelectedSize("");
+    setSelectedUnit("");
+    setInitialQuantity("0");
   };
 
   // 5. Submit บันทึกข้อมูล
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!inputName.trim()) return;
+    if (activeTab !== "stock" && !inputName.trim()) return;
+    
     setSubmitting(true);
     try {
       if (activeTab === "material") {
@@ -99,6 +119,15 @@ function MasterDataPage() {
         await masterAPI.createSize(inputName, selectedCategory);
       } else if (activeTab === "unit") {
         await masterAPI.createUnit(inputName, selectedCategory, selectedSize);
+      } else if (activeTab === "stock") {
+        // 🟢 สร้างรายการ Stock
+        await stockAPI.createStock({
+          materialId: selectedMaterial,
+          categoryId: selectedCategory,
+          sizeId: selectedSize,
+          unitId: selectedUnit,
+          initialQuantity: parseFloat(initialQuantity) || 0,
+        });
       }
 
       resetForm();
@@ -120,6 +149,7 @@ function MasterDataPage() {
       } else if (activeTab === "category") await masterAPI.deleteCategory(id);
       else if (activeTab === "size") await masterAPI.deleteSize(id);
       else if (activeTab === "unit") await masterAPI.deleteUnit(id);
+      else if (activeTab === "stock") await stockAPI.deleteStock(id); // 🟢 เพิ่มลบ Stock
       fetchTabData();
     } catch (err) {
       alert("ບໍ່ສາມາດລົບຂໍ້ມູນໄດ້");
@@ -130,7 +160,8 @@ function MasterDataPage() {
     if (activeTab === "material") return "ຊື່ວັດຖຸດິບ";
     if (activeTab === "category") return "ປະເພດ";
     if (activeTab === "size") return "ຂະໜາດ";
-    return "ໜ່ວຍ";
+    if (activeTab === "unit") return "ໜ່ວຍ";
+    return "ສະຕັອກ (Stock)";
   };
 
   return (
@@ -171,6 +202,16 @@ function MasterDataPage() {
         >
           📦 4. ໜ່ວຍ (Unit)
         </button>
+        
+        {/* 🟢 เพื่ม Tab Stock */}
+        <button
+          onClick={() => setActiveTab("stock")}
+          className={`py-3 px-6 font-semibold text-sm whitespace-nowrap border-b-2 transition ${
+            activeTab === "stock" ? "border-emerald-500 text-emerald-600 font-bold" : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          📊 5. ສະຕັອກ (Stock)
+        </button>
       </div>
 
       {/* 🟢 2. Action Header */}
@@ -189,8 +230,8 @@ function MasterDataPage() {
         <form onSubmit={handleSubmit} className="bg-white p-5 rounded-xl border border-amber-200 shadow-sm flex flex-col gap-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             
-            {/* Step 1: เลือก Material (แสดงตอนอยู่ Tab Category) */}
-            {activeTab === "category" && (
+            {/* Step 1: เลือก Material (แสดงตอนอยู่ Category, Size, Unit, Stock) */}
+            {(activeTab === "category" || activeTab === "size" || activeTab === "unit" || activeTab === "stock") && (
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-semibold text-gray-600">1. ເລືອກວັດຖຸດິບ</label>
                 <select
@@ -207,48 +248,31 @@ function MasterDataPage() {
               </div>
             )}
 
-            {/* Step 2: เลือก Material & Category (แสดงตอนอยู่ Tab Size หรือ Unit) */}
-            {(activeTab === "size" || activeTab === "unit") && (
-              <>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-gray-600">1. ເລືອກວັດຖຸດິບ</label>
-                  <select
-                    required
-                    value={selectedMaterial}
-                    onChange={(e) => setSelectedMaterial(e.target.value)}
-                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400"
-                  >
-                    <option value="">-- ເລືອກວັດຖຸດິບ --</option>
-                    {materials.map((m) => (
-                      <option key={m.id} value={m.id}>{m.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-gray-600">2. ເລືອກປະເພດ</label>
-                  <select
-                    required
-                    disabled={!selectedMaterial}
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 disabled:bg-gray-100"
-                  >
-                    <option value="">{!selectedMaterial ? "-- ເລືອກວັດຖຸດິບກ່ອນ --" : "-- ເລືອກປະເພດ --"}</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </>
+            {/* Step 2: เลือก Category (แสดงตอน Size, Unit, Stock) */}
+            {(activeTab === "size" || activeTab === "unit" || activeTab === "stock") && (
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-gray-600">2. ເລືອກປະເພດ</label>
+                <select
+                  required
+                  disabled={!selectedMaterial}
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 disabled:bg-gray-100"
+                >
+                  <option value="">{!selectedMaterial ? "-- ເລືອກວັດຖຸດິບກ່ອນ --" : "-- ເລືອກປະເພດ --"}</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
             )}
 
-            {/* Step 3: เลือก Size (แสดงเฉพาะตอนอยู่ Tab Unit) */}
-            {activeTab === "unit" && (
+            {/* Step 3: เลือก Size (แสดงตอน Unit, Stock) */}
+            {(activeTab === "unit" || activeTab === "stock") && (
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-semibold text-gray-600">3. ເລືອກຂະໜາດ</label>
                 <select
-                  required
+                  required={activeTab === "unit"}
                   disabled={!selectedCategory}
                   value={selectedSize}
                   onChange={(e) => setSelectedSize(e.target.value)}
@@ -262,23 +286,59 @@ function MasterDataPage() {
               </div>
             )}
 
-            {/* Step Final: ช่องป้อนชื่อ Item */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-600">
-                {activeTab === "material" && "ຊື່ວັດຖຸດິບ (ເຊັ່ນ: ເບຍ)"}
-                {activeTab === "category" && "ຊື່ປະເພດ (ເຊັ່ນ: ນ້ຳ)"}
-                {activeTab === "size" && "ຊື່ຂະໜາດ (ເຊັ່ນ: ໃຫຍ່, ກາງ, ນ້ອຍ)"}
-                {activeTab === "unit" && "ຊື່ໜ່ວຍ (ເຊັ່ນ: ລັງ, ແກັດ)"}
-              </label>
-              <input
-                type="text"
-                required
-                value={inputName}
-                onChange={(e) => setInputName(e.target.value)}
-                placeholder={`ປ້ອນຊື່ ${getTabTitle()}...`}
-                className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-amber-400"
-              />
-            </div>
+            {/* Step 4: เลือก Unit (แสดงเฉพาะตอนอยู่ Stock) */}
+            {activeTab === "stock" && (
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-gray-600">4. ເລືອກໜ່ວຍ</label>
+                <select
+                  required
+                  disabled={!selectedCategory}
+                  value={selectedUnit}
+                  onChange={(e) => setSelectedUnit(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 disabled:bg-gray-100"
+                >
+                  <option value="">{!selectedCategory ? "-- ເລືອກປະເພດກ່ອນ --" : "-- ເລືອກໜ່ວຍ --"}</option>
+                  {availableUnits.map((u) => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Step 5: จำนวนเริ่มต้น (แสดงเฉพาะตอน Stock) */}
+            {activeTab === "stock" && (
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-gray-600">5. ຈຳນວນເລີ່ມຕົ້ນ</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={initialQuantity}
+                  onChange={(e) => setInitialQuantity(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-amber-400"
+                />
+              </div>
+            )}
+
+            {/* Step Final: ช่องป้อนชื่อ Item (ซ่อนเมื่ออยู่ Tab Stock) */}
+            {activeTab !== "stock" && (
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-gray-600">
+                  {activeTab === "material" && "ຊື່ວັດຖຸດິບ (ເຊັ່ນ: ເບຍ)"}
+                  {activeTab === "category" && "ຊື່ປະເພດ (ເຊັ່ນ: ນ້ຳ)"}
+                  {activeTab === "size" && "ຊື່ຂະໜາດ (ເຊັ່ນ: ໃຫຍ່, ກາງ, ນ້ອຍ)"}
+                  {activeTab === "unit" && "ຊື່ໜ່ວຍ (ເຊັ່ນ: ລັງ, ແກັດ)"}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={inputName}
+                  onChange={(e) => setInputName(e.target.value)}
+                  placeholder={`ປ້ອນຊື່ ${getTabTitle()}...`}
+                  className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-amber-400"
+                />
+              </div>
+            )}
           </div>
 
           <button
@@ -302,7 +362,18 @@ function MasterDataPage() {
             <thead className="bg-gray-50 border-b border-gray-200 text-gray-700 uppercase text-xs">
               <tr>
                 <th className="px-6 py-3">ID</th>
-                <th className="px-6 py-3">ຊື່ {getTabTitle()}</th>
+                {activeTab !== "stock" ? (
+                  <th className="px-6 py-3">ຊື່ {getTabTitle()}</th>
+                ) : (
+                  <>
+                    <th className="px-6 py-3">ວັດຖຸດິບ</th>
+                    <th className="px-6 py-3">ປະເພດ</th>
+                    <th className="px-6 py-3">ຂະໜາດ</th>
+                    <th className="px-6 py-3">ໜ່ວຍ</th>
+                    <th className="px-6 py-3">ຈຳນວນຄົງເຫຼືອ</th>
+                  </>
+                )}
+
                 {activeTab === "category" && <th className="px-6 py-3">ວັດຖຸດິບ</th>}
                 {activeTab === "size" && <th className="px-6 py-3">ປະເພດ</th>}
                 {activeTab === "unit" && (
@@ -318,7 +389,34 @@ function MasterDataPage() {
               {items.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50 transition">
                   <td className="px-6 py-4 font-medium text-gray-900">{item.id}</td>
-                  <td className="px-6 py-4 font-semibold text-gray-800">{item.name}</td>
+
+                  {/* Standard Name */}
+                  {activeTab !== "stock" && (
+                    <td className="px-6 py-4 font-semibold text-gray-800">{item.name}</td>
+                  )}
+
+                  {/* Stock Details */}
+                  {activeTab === "stock" && (
+                    <>
+                      <td className="px-6 py-4 font-semibold text-gray-800">{item.materialName || item.material?.name || "-"}</td>
+                      <td className="px-6 py-4">
+                        <span className="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-medium">
+                          {item.categoryName || item.category?.name || "-"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-medium">
+                          {item.sizeName || item.size?.name || "-"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 font-medium text-purple-700">
+                        {item.unitName || item.unit?.name || "-"}
+                      </td>
+                      <td className="px-6 py-4 font-bold text-emerald-600">
+                        {item.totalQuantity ?? item.quantity ?? 0}
+                      </td>
+                    </>
+                  )}
                   
                   {activeTab === "category" && (
                     <td className="px-6 py-4">

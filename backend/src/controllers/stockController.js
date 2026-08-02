@@ -98,3 +98,15 @@ exports.getImportHistory = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.deleteStock = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await prisma.stock.delete({
+      where: { id: Number(id) },
+    });
+    res.json({ message: "ลบสต็อกเรียบร้อยแล้ว" });
+  } catch (error) {
+    next(error);
+  }
+};
