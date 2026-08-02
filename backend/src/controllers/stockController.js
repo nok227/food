@@ -1,25 +1,17 @@
 const prisma = require("../config/prisma");
 
-// 1. ดึงข้อมูลสต็อกทั้งหมด (คำนวณ ยอดเก่า / นำเข้าวันนี้ / ยอดรวม)
-exports.getStocks = async (req, res) => {
+// 🟢 1. ดึงข้อมูลสต็อก
+exports.getStocks = async (req, res, next) => {
   try {
     const stocks = await prisma.stock.findMany({
-      include: {
-        material: true,
-        category: true,
-        size: true,
-        unit: true,
-        imports: true,
-      },
+      include: { material: true, category: true, size: true, unit: true, imports: true },
       orderBy: { id: "desc" },
     });
 
-    // วันนี้ เวลา 00:00:00
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
 
     const formatted = stocks.map((s) => {
-      // คำนวณยอดที่นำเข้าในวันนี้
       const todayQty = s.imports
         .filter((imp) => new Date(imp.importDate) >= startOfToday)
         .reduce((sum, imp) => sum + imp.quantity, 0);
@@ -40,12 +32,33 @@ exports.getStocks = async (req, res) => {
 
     res.json(formatted);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 };
 
-// 2. นำเข้าสต็อกวัตถุดิบเพิ่ม (Stock In)
-exports.importStock = async (req, res) => {
+// 🟢 2. สร้างสต็อกใหม่ (จุดที่ขาดไป!)
+exports.createStock = async (req, res, next) => {
+  try {
+    const { materialId, categoryId, sizeId, unitId, initialQuantity } = req.body;
+
+    const newStock = await prisma.stock.create({
+      data: {
+        materialId: materialId ? Number(materialId) : null,
+        categoryId: categoryId ? Number(categoryId) : null,
+        sizeId: sizeId ? Number(sizeId) : null,
+        unitId: unitId ? Number(unitId) : null,
+        quantity: initialQuantity ? Number(initialQuantity) : 0,
+      },
+    });
+
+    res.status(201).json(newStock);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 🟢 3. นำเข้าสต็อก
+exports.importStock = async (req, res, next) => {
   try {
     const { stockId, quantity, note } = req.body;
     const importQty = Number(quantity);
@@ -54,23 +67,14 @@ exports.importStock = async (req, res) => {
       return res.status(400).json({ error: "ข้อมูลนำเข้าไม่ถูกต้อง" });
     }
 
-    // ทำงานใน Transaction
     const result = await prisma.$transaction(async (tx) => {
-      // บันทึกประวัตินำเข้า
       const stockImport = await tx.stockImport.create({
-        data: {
-          stockId: Number(stockId),
-          quantity: importQty,
-          note: note || "",
-        },
+        data: { stockId: Number(stockId), quantity: importQty, note: note || "" },
       });
 
-      // บวกยอดสะสมเข้าตาราง Stock
       const updatedStock = await tx.stock.update({
         where: { id: Number(stockId) },
-        data: {
-          quantity: { increment: importQty },
-        },
+        data: { quantity: { increment: importQty } },
       });
 
       return { stockImport, updatedStock };
@@ -78,23 +82,19 @@ exports.importStock = async (req, res) => {
 
     res.json(result);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 };
 
-// 3. ดึงประวัติการนำเข้าทั้งหมด
-exports.getImportHistory = async (req, res) => {
+// 🟢 4. ประวัตินำเข้า
+exports.getImportHistory = async (req, res, next) => {
   try {
     const history = await prisma.stockImport.findMany({
-      include: {
-        stock: {
-          include: { material: true, category: true, unit: true },
-        },
-      },
+      include: { stock: { include: { material: true, category: true, unit: true } } },
       orderBy: { importDate: "desc" },
     });
     res.json(history);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 };
