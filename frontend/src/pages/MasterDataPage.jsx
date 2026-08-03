@@ -137,7 +137,7 @@ function MasterDataPage() {
     });
   };
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (activeTab === "stock") {
@@ -158,9 +158,27 @@ function MasterDataPage() {
     try {
       if (activeTab === "material") {
         let finalImageUrl = inputImageUrl;
+
+        // 🟢 ເພີ່ມການກວດສອບຂະໜາດ ແລະ ປະເພດຂອງໄຟລ໌ຮູບພາບ
         if (imageMode === "file" && imageFile) {
+          // 1. ກວດສອບປະເພດໄຟລ໌ (ຕ້ອງເປັນຮູບພາບເທົ່ານັ້ນ)
+          if (!imageFile.type.startsWith("image/")) {
+            alert("⚠️ ກະລຸນາເລືອກໄຟລ໌ທີ່ເປັນຮູບພາບເທົ່ານັ້ນ (JPG, PNG, WEBP, ...)");
+            setSubmitting(false);
+            return;
+          }
+
+          // 2. ກວດສອບຂະໜາດໄຟລ໌ (ກຳນົດບໍ່ເກີນ 2MB)
+          const maxSizeInMB = 2;
+          if (imageFile.size > maxSizeInMB * 1024 * 1024) {
+            alert(`⚠️ ຂະໜາດຮູບພາບໃຫຍ່ເກີນໄປ! (ເກີນ ${maxSizeInMB}MB)\nກະລຸນາເລືອກຮູບໃໝ່ ຫຼື ໃຊ້ຮູບແບບ URL ແທນ.`);
+            setSubmitting(false);
+            return;
+          }
+
           finalImageUrl = await convertBase64(imageFile);
         }
+
         await masterAPI.createMaterial(inputName, finalImageUrl);
         loadMaterials();
       } else if (activeTab === "category") {
