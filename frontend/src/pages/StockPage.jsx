@@ -104,7 +104,7 @@ export default function StockPage() {
 
       {/* 📜 3. ประวัตินำเข้าแยกสีวันนี้ / วันอื่น */}
       <div style={{ backgroundColor: "#fff", padding: "20px", borderRadius: "12px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-        <h2 style={{ fontSize: "18px", marginBottom: "16px" }}>📜 ประวัตินำเข้าวัตถุดิบ</h2>
+        <h2 style={{ fontSize: "18px", marginBottom: "16px" }}>📜 ประวัตินำเข้าวัตถุดิบio</h2>
         <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
           <thead>
             <tr style={{ backgroundColor: "#f1f5f9" }}>
