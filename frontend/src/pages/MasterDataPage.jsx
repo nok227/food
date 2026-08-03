@@ -206,14 +206,14 @@ function MasterDataPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-6xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-800">ຈັດການຂໍ້ມູນ Master Data & Stock</h2>
+    <div className="flex flex-col gap-4 sm:gap-6 max-w-6xl mx-auto">
+      <h2 className="text-xl sm:text-2xl font-bold text-gray-800">ຈັດການຂໍ້ມູນ Master Data & Stock</h2>
 
       {/* 🟢 1. Tabs Bar */}
       <div className="flex border-b border-gray-200 overflow-x-auto">
         <button
           onClick={() => setActiveTab("material")}
-          className={`py-3 px-5 font-semibold text-sm whitespace-nowrap border-b-2 transition ${
+          className={`py-2.5 sm:py-3 px-3 sm:px-5 font-semibold text-xs sm:text-sm whitespace-nowrap border-b-2 transition ${
             activeTab === "material" ? "border-amber-500 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700"
           }`}
         >
@@ -221,7 +221,7 @@ function MasterDataPage() {
         </button>
         <button
           onClick={() => setActiveTab("category")}
-          className={`py-3 px-5 font-semibold text-sm whitespace-nowrap border-b-2 transition ${
+          className={`py-2.5 sm:py-3 px-3 sm:px-5 font-semibold text-xs sm:text-sm whitespace-nowrap border-b-2 transition ${
             activeTab === "category" ? "border-amber-500 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700"
           }`}
         >
@@ -229,7 +229,7 @@ function MasterDataPage() {
         </button>
         <button
           onClick={() => setActiveTab("size")}
-          className={`py-3 px-5 font-semibold text-sm whitespace-nowrap border-b-2 transition ${
+          className={`py-2.5 sm:py-3 px-3 sm:px-5 font-semibold text-xs sm:text-sm whitespace-nowrap border-b-2 transition ${
             activeTab === "size" ? "border-amber-500 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700"
           }`}
         >
@@ -237,7 +237,7 @@ function MasterDataPage() {
         </button>
         <button
           onClick={() => setActiveTab("unit")}
-          className={`py-3 px-5 font-semibold text-sm whitespace-nowrap border-b-2 transition ${
+          className={`py-2.5 sm:py-3 px-3 sm:px-5 font-semibold text-xs sm:text-sm whitespace-nowrap border-b-2 transition ${
             activeTab === "unit" ? "border-amber-500 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700"
           }`}
         >
@@ -247,7 +247,7 @@ function MasterDataPage() {
         {/* Tab Stock */}
         <button
           onClick={() => setActiveTab("stock")}
-          className={`py-3 px-5 font-semibold text-sm whitespace-nowrap border-b-2 transition ${
+          className={`py-2.5 sm:py-3 px-3 sm:px-5 font-semibold text-xs sm:text-sm whitespace-nowrap border-b-2 transition ${
             activeTab === "stock" ? "border-emerald-500 text-emerald-600 font-bold" : "border-transparent text-gray-500 hover:text-gray-700"
           }`}
         >
@@ -257,7 +257,7 @@ function MasterDataPage() {
         {/* 🟢 ເພີ່ມ Tab Import ໄວ້ຂ້າງ Stock */}
         <button
           onClick={() => setActiveTab("import")}
-          className={`py-3 px-5 font-semibold text-sm whitespace-nowrap border-b-2 transition ${
+          className={`py-2.5 sm:py-3 px-3 sm:px-5 font-semibold text-xs sm:text-sm whitespace-nowrap border-b-2 transition ${
             activeTab === "import" ? "border-blue-600 text-blue-600 font-bold" : "border-transparent text-gray-500 hover:text-gray-700"
           }`}
         >
@@ -266,13 +266,14 @@ function MasterDataPage() {
       </div>
 
       {/* 🟢 2. Action Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold text-gray-700">
+      {/* จอเล็ก: เรียงเป็นแนวตั้ง ปุ่มเต็มความกว้าง / จอใหญ่ (sm+): เรียงแนวนอนเหมือนเดิม */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+        <h3 className="text-base sm:text-lg font-bold text-gray-700">
           {activeTab === "import" ? "ລາຍການສະຕັອກ & ຟອມນຳເຂົ້າ" : `ລາຍການ ${getTabTitle()}`}
         </h3>
         <button
           onClick={() => setShowForm(!showForm)}
-          className={`px-4 py-2 text-white rounded-lg text-sm font-semibold transition ${
+          className={`w-full sm:w-auto px-4 py-2 text-white rounded-lg text-sm font-semibold transition ${
             activeTab === "import" ? "bg-blue-600 hover:bg-blue-700" : "bg-amber-500 hover:bg-amber-600"
           }`}
         >
@@ -282,11 +283,11 @@ function MasterDataPage() {
 
       {/* 🟢 3. Dynamic Form */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="bg-white p-3 sm:p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-3 sm:gap-4">
           
           {/* 🟢 ຟອມສຳລັບ Tab Import (ນຳເຂົ້າ) */}
           {activeTab === "import" ? (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-semibold text-gray-600">ເລືອກວັດຖຸດິບໃນສະຕັອກ</label>
                 <select
@@ -331,7 +332,7 @@ function MasterDataPage() {
             </div>
           ) : (
             /* 🟢 ຟອມປົກຕິສຳລັບ Master Data & Stock */
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               {(activeTab === "category" || activeTab === "size" || activeTab === "unit" || activeTab === "stock") && (
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-semibold text-gray-600">1. ເລືອກວັດຖຸດິບ</label>
@@ -441,7 +442,7 @@ function MasterDataPage() {
           <button
             type="submit"
             disabled={submitting}
-            className={`self-end px-6 py-2 text-white rounded-lg text-sm font-semibold transition disabled:opacity-50 ${
+            className={`w-full sm:self-end sm:w-auto px-6 py-2 text-white rounded-lg text-sm font-semibold transition disabled:opacity-50 ${
               activeTab === "import" ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"
             }`}
           >
@@ -451,105 +452,111 @@ function MasterDataPage() {
       )}
 
       {/* 🟢 4. Table Display */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      {/* 
+        rounded-xl + border อยู่ที่กล่องนอกสุด (ไม่มี overflow-hidden แล้ว)
+        ส่วน overflow-x-auto อยู่ที่กล่องด้านใน -> ตารางกว้าง (เยอะคอลัมน์อย่าง stock/import)
+        จะเลื่อนซ้าย-ขวาได้บนจอเล็ก โดยไม่ทำให้ layout หน้าเว็บพังหรือถูกตัด
+      */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
         {loading ? (
-          <div className="p-8 text-center text-gray-400">ກໍາລັງໂຫລດຂໍ້ມູນ...</div>
+          <div className="p-6 sm:p-8 text-center text-gray-400 text-sm">ກໍາລັງໂຫລດຂໍ້ມູນ...</div>
         ) : items.length === 0 ? (
-          <div className="p-8 text-center text-gray-400">ບໍ່ມີຂໍ້ມູນ {getTabTitle()}</div>
+          <div className="p-6 sm:p-8 text-center text-gray-400 text-sm">ບໍ່ມີຂໍ້ມູນ {getTabTitle()}</div>
         ) : (
+          <div className="overflow-x-auto rounded-xl">
           <table className="w-full text-left text-sm text-gray-600">
             <thead className="bg-gray-50 border-b border-gray-200 text-gray-700 uppercase text-xs">
               <tr>
-                <th className="px-5 py-3">ID</th>
+                <th className="px-2.5 sm:px-5 py-2 sm:py-3">ID</th>
                 {(activeTab === "stock" || activeTab === "import") ? (
                   <>
-                    <th className="px-5 py-3">ວັດຖຸດິບ</th>
-                    <th className="px-5 py-3">ປະເພດ</th>
-                    <th className="px-5 py-3">ຂະໜາດ</th>
-                    <th className="px-5 py-3">ໜ່ວຍ</th>
+                    <th className="px-2.5 sm:px-5 py-2 sm:py-3">ວັດຖຸດິບ</th>
+                    <th className="px-2.5 sm:px-5 py-2 sm:py-3">ປະເພດ</th>
+                    <th className="px-2.5 sm:px-5 py-2 sm:py-3">ຂະໜາດ</th>
+                    <th className="px-2.5 sm:px-5 py-2 sm:py-3">ໜ່ວຍ</th>
                     
                     {/* 🟢 ຄໍລຳປັບປຸງໃໝ່ຕາມຄວາມຕ້ອງການ */}
-                    <th className="px-5 py-3 text-amber-700 bg-amber-50">ຈຳນວນເກົ່າ</th>
-                    <th className="px-5 py-3 text-blue-700 bg-blue-50">ຈຳນວນເພີ່ມມື້ນີ້</th>
-                    <th className="px-5 py-3 text-emerald-700 bg-emerald-50">ຈຳນວນທັງໝົດ</th>
+                    <th className="px-2.5 sm:px-5 py-2 sm:py-3 text-amber-700 bg-amber-50">ຈຳນວນເກົ່າ</th>
+                    <th className="px-2.5 sm:px-5 py-2 sm:py-3 text-blue-700 bg-blue-50">ຈຳນວນເພີ່ມມື້ນີ້</th>
+                    <th className="px-2.5 sm:px-5 py-2 sm:py-3 text-emerald-700 bg-emerald-50">ຈຳນວນທັງໝົດ</th>
                   </>
                 ) : (
-                  <th className="px-6 py-3">ຊື່ {getTabTitle()}</th>
+                  <th className="px-3 sm:px-6 py-2 sm:py-3">ຊື່ {getTabTitle()}</th>
                 )}
 
-                {activeTab === "category" && <th className="px-6 py-3">ວັດຖຸດິບ</th>}
-                {activeTab === "size" && <th className="px-6 py-3">ປະເພດ</th>}
+                {activeTab === "category" && <th className="px-3 sm:px-6 py-2 sm:py-3">ວັດຖຸດິບ</th>}
+                {activeTab === "size" && <th className="px-3 sm:px-6 py-2 sm:py-3">ປະເພດ</th>}
                 {activeTab === "unit" && (
                   <>
-                    <th className="px-6 py-3">ປະເພດ</th>
-                    <th className="px-6 py-3">ຂະໜາດ</th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3">ປະເພດ</th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3">ຂະໜາດ</th>
                   </>
                 )}
-                <th className="px-5 py-3 text-right">ຈັດການ</th>
+                <th className="px-2.5 sm:px-5 py-2 sm:py-3 text-right">ຈັດການ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {items.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50 transition">
-                  <td className="px-5 py-4 font-medium text-gray-900">{item.id}</td>
+                  <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-medium text-gray-900">{item.id}</td>
 
                   {/* Stock / Import Table Layout */}
                   {(activeTab === "stock" || activeTab === "import") ? (
                     <>
-                      <td className="px-5 py-4 font-semibold text-gray-800">{item.materialName}</td>
-                      <td className="px-5 py-4">
+                      <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-semibold text-gray-800">{item.materialName}</td>
+                      <td className="px-2.5 sm:px-5 py-2 sm:py-4">
                         <span className="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-medium">
                           {item.categoryName}
                         </span>
                       </td>
-                      <td className="px-5 py-4">
+                      <td className="px-2.5 sm:px-5 py-2 sm:py-4">
                         <span className="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-medium">
                           {item.sizeName}
                         </span>
                       </td>
-                      <td className="px-5 py-4 font-medium text-purple-700">
+                      <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-medium text-purple-700">
                         {item.unitName}
                       </td>
 
                       {/* 🟢 แสดง 3 ช่องจำนวนแบบชัดเจน */}
-                      <td className="px-5 py-4 font-bold text-amber-600 bg-amber-50/50">
+                      <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-bold text-amber-600 bg-amber-50/50">
                         {item.oldQuantity ?? 0}
                       </td>
-                      <td className="px-5 py-4 font-bold text-blue-600 bg-blue-50/50">
+                      <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-bold text-blue-600 bg-blue-50/50">
                         +{item.todayQuantity ?? 0}
                       </td>
-                      <td className="px-5 py-4 font-bold text-emerald-600 bg-emerald-50/50">
+                      <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-bold text-emerald-600 bg-emerald-50/50">
                         {item.totalQuantity ?? 0}
                       </td>
                     </>
                   ) : (
-                    <td className="px-6 py-4 font-semibold text-gray-800">{item.name}</td>
+                    <td className="px-3 sm:px-6 py-2 sm:py-4 font-semibold text-gray-800">{item.name}</td>
                   )}
 
                   {activeTab === "category" && (
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-6 py-2 sm:py-4">
                       {item.material ? <span className="bg-purple-100 text-purple-800 text-xs px-2.5 py-1 rounded-full font-medium">{item.material.name}</span> : "-"}
                     </td>
                   )}
 
                   {activeTab === "size" && (
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-6 py-2 sm:py-4">
                       {item.category ? <span className="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-medium">{item.category.name}</span> : "-"}
                     </td>
                   )}
 
                   {activeTab === "unit" && (
                     <>
-                      <td className="px-6 py-4">
+                      <td className="px-3 sm:px-6 py-2 sm:py-4">
                         {item.category ? <span className="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-medium">{item.category.name}</span> : "-"}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-3 sm:px-6 py-2 sm:py-4">
                         {item.size ? <span className="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-medium">{item.size.name}</span> : "-"}
                       </td>
                     </>
                   )}
 
-                  <td className="px-5 py-4 text-right">
+                  <td className="px-2.5 sm:px-5 py-2 sm:py-4 text-right">
                     <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:text-red-700 font-medium transition">
                       ລົບ
                     </button>
@@ -558,6 +565,7 @@ function MasterDataPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

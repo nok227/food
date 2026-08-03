@@ -21,6 +21,10 @@ const EDGE_ZONE = 40; // ปัดเปิดได้เฉพาะเริ�
 // เปิด/ปิดได้ 2 ทาง: กดปุ่มแฮมเบอร์เกอร์ใน Header หรือ "ปัดนิ้ว" บนจอสัมผัส
 // - ปัดไปทางซ้าย (ที่ไหนก็ได้) ตอน Sidebar เปิดอยู่ -> ปิด
 // - ปัดไปทางขวาเริ่มจากใกล้ขอบซ้ายจอ ตอน Sidebar ปิดอยู่ -> เปิด
+//
+// พฤติกรรม Sidebar ต่างกันตามขนาดจอ (ดูรายละเอียดใน Sidebar.jsx):
+// - จอใหญ่ (md+): ดันเนื้อหา (push) เหมือนเดิม
+// - จอเล็ก: ลอยทับเนื้อหา (overlay/float) พร้อม backdrop มืด ไม่ดันเนื้อหาอีกต่อไป
 function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(
     () => typeof window !== "undefined" && window.innerWidth >= 768
@@ -54,7 +58,8 @@ function MainLayout() {
       <Header onMenuClick={() => setSidebarOpen((prev) => !prev)} />
       <TabsBar />
 
-      <div className="flex flex-1 min-h-0">
+      {/* 🟢 relative: จำเป็นสำหรับ Sidebar บนจอเล็ก ที่ใช้ position: absolute ลอยทับ (ไม่ดันเนื้อหา) */}
+      <div className="flex flex-1 min-h-0 relative">
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         {/* ฝั่งขวา: มีแต่ Content + Footer ที่เลื่อนได้ */}
