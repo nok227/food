@@ -111,7 +111,7 @@ export default function StockPage() {
               <th style={{ padding: "12px" }}>วันที่ / เวลา</th>
               <th style={{ padding: "12px" }}>วัตถุดิบ</th>
               <th style={{ padding: "12px" }}>จำนวน</th>
-              <th style={{ padding: "12px" }}>สถานะ</th>
+              <th style={{ padding: "12px" }}>สถานะ!</th>
             </tr>
           </thead>
           <tbody>
