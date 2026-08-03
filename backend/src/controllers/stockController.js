@@ -1,31 +1,21 @@
-// backend/src/controllers/stockController.js
 const prisma = require("../config/prisma");
 
-// 🟢 1. ດຶງຂໍ້ມູນສະຕັອກ + ຄຳນວນແຍກ ມື້ນີ້ / ເກົ່າ / ທັງໝົດ
+// 🟢 1. ດຶງຂໍ້ມູນສະຕັອກ
 exports.getStocks = async (req, res, next) => {
   try {
     const stocks = await prisma.stock.findMany({
-      include: { 
-        material: true, 
-        category: true, 
-        size: true, 
-        unit: true, 
-        imports: true 
-      },
+      include: { material: true, category: true, size: true, unit: true, imports: true },
       orderBy: { id: "desc" },
     });
 
-    // ຫາເວລາເລີ່ມຕົ້ນຂອງມື້ນີ້ (00:00:00)
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
 
     const formatted = stocks.map((s) => {
-      // ບວກຈຳນວນທີ່ນຳເຂົ້າສະເພາະມື້ນີ້ (importDate >= startOfToday)
       const todayQty = s.imports
         .filter((imp) => new Date(imp.importDate) >= startOfToday)
         .reduce((sum, imp) => sum + imp.quantity, 0);
 
-      // ຈຳນວນເກົ່າ = ຈຳນວນທັງໝົດ - ຈຳນວນທີ່ເພີ່ມມື້ນີ້
       const oldQty = s.quantity - todayQty;
 
       return {
@@ -34,9 +24,9 @@ exports.getStocks = async (req, res, next) => {
         categoryName: s.category?.name || "-",
         sizeName: s.size?.name || "-",
         unitName: s.unit?.name || "-",
-        oldQuantity: oldQty < 0 ? 0 : oldQty,   // ຈຳນວນເກົ່າ
-        todayQuantity: todayQty,                 // ຈຳນວນມື້ນີ້
-        totalQuantity: s.quantity,              // ຈຳນວນທັງໝົດ
+        oldQuantity: oldQty < 0 ? 0 : oldQty,
+        todayQuantity: todayQty,
+        totalQuantity: s.quantity,
       };
     });
 
@@ -65,15 +55,9 @@ exports.createStock = async (req, res, next) => {
         unitId: parsedUnitId,
         quantity: parsedQuantity,
       },
-      include: {
-        material: true,
-        category: true,
-        size: true,
-        unit: true,
-      }
+      include: { material: true, category: true, size: true, unit: true }
     });
 
-    // ຖ້າມີจำนวนเริ่มต้น ให้ลงบันทึกเป็น Import ของวันนี้ด้วย
     if (parsedQuantity > 0) {
       await prisma.stockImport.create({
         data: {
@@ -86,12 +70,11 @@ exports.createStock = async (req, res, next) => {
 
     res.status(201).json(newStock);
   } catch (error) {
-    console.error("Error creating stock:", error);
-    res.status(500).json({ error: error.message || "Cannot create stock" });
+    next(error);
   }
 };
 
-// 🟢 3. ຟັງຊັນນຳເຂົ້າສະຕັອກ (Import Stock)
+// 🟢 3. ນຳເຂົ້າສະຕັອກ
 exports.importStock = async (req, res, next) => {
   try {
     const { stockId, quantity, note } = req.body;
@@ -102,12 +85,10 @@ exports.importStock = async (req, res, next) => {
     }
 
     const result = await prisma.$transaction(async (tx) => {
-      // 1. ບັນທຶກປະວັດການນຳເຂົ້າ (ວັນທີຈະເປັນ Now อัตโนมัติ)
       const stockImport = await tx.stockImport.create({
         data: { stockId: Number(stockId), quantity: importQty, note: note || "" },
       });
 
-      // 2. ອັບເດດຈຳນວນທັງໝົດໃນ Stock (quantity + importQty)
       const updatedStock = await tx.stock.update({
         where: { id: Number(stockId) },
         data: { quantity: { increment: importQty } },
@@ -122,7 +103,20 @@ exports.importStock = async (req, res, next) => {
   }
 };
 
-// 🟢 4. ລົບສະຕັອກ
+// 🟢 4. ປະວັດການນຳເຂົ້າ (ຈຸດນີ້ທີ່ຂາດ ຫຼື ຂຽນຊື່ຟັງຊັນບໍ່ກົງ!)
+exports.getImportHistory = async (req, res, next) => {
+  try {
+    const history = await prisma.stockImport.findMany({
+      include: { stock: { include: { material: true, category: true, unit: true } } },
+      orderBy: { importDate: "desc" },
+    });
+    res.json(history);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 🟢 5. ລົບສະຕັອກ
 exports.deleteStock = async (req, res, next) => {
   try {
     const { id } = req.params;
