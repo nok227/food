@@ -15,6 +15,7 @@ function MasterDataPage() {
   const [categories, setCategories] = useState([]);
   const [availableSizes, setAvailableSizes] = useState([]);
   const [availableUnits, setAvailableUnits] = useState([]);
+  const [allCategories, setAllCategories] = useState([]); // 🟢 ทุกปะเภท (พร้อมข้อมูลวัตถุดิบต้นทาง) ใช้หารูปให้ tab size/unit
 
   // Form Inputs
   const [inputName, setInputName] = useState("");
@@ -44,6 +45,16 @@ function MasterDataPage() {
     try {
       const data = await stockAPI.getStocks();
       setStockList(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // 🟢 โหลดปะเภททั้งหมด (ไม่กรองตามวัตถุดิบ) เก็บไว้เทียบหารูปให้แท็บ size/unit
+  const loadAllCategories = async () => {
+    try {
+      const data = await masterAPI.getCategories();
+      setAllCategories(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
     }
@@ -105,6 +116,7 @@ function MasterDataPage() {
 
   useEffect(() => {
     loadMaterials();
+    loadAllCategories();
   }, []);
 
   useEffect(() => {
@@ -239,6 +251,46 @@ const handleSubmit = async (e) => {
     return "ນຳເຂົ້າວັດຖຸດິບ";
   };
 
+  // 🟢 หารูปของวัตถุดิบต้นทาง ให้ใช้ได้กับทุกแท็บ
+  // material: มีรูปติดกับ item เลย
+  // category: ผูกกับ material โดยตรง (item.material)
+  // stock/import: ผูกกับ material ผ่านชื่อ/id (item.materialId, item.materialName)
+  // size/unit: ไม่มีวัตถุดิบผูกตรงๆ ต้องไล่ chain size/unit -> category -> material
+  //            โดยเทียบ categoryId กับ allCategories (โหลดไว้ตอน mount)
+  const getRelatedImageUrl = (item) => {
+    if (!item) return null;
+
+    // 1) มีรูปติดมากับ item เลย (material tab)
+    if (item.imageUrl) return item.imageUrl;
+
+    // 2) มี material ผูกมาโดยตรง (category tab, หรือ stock/import ถ้า backend join มาให้)
+    if (item.material?.imageUrl) return item.material.imageUrl;
+    if (item.materialImageUrl) return item.materialImageUrl;
+
+    // 3) หาโดยเทียบชื่อ/id วัตถุดิบกับรายการ materials ที่โหลดไว้ (stock/import/category)
+    const matchId = item.materialId ?? item.material?.id;
+    const matchName = item.materialName ?? item.material?.name;
+    if (matchId || matchName) {
+      const foundMaterial = materials.find(
+        (m) => (matchId && m.id === matchId) || (matchName && m.name === matchName)
+      );
+      if (foundMaterial?.imageUrl) return foundMaterial.imageUrl;
+    }
+
+    // 4) แท็บ ขะໜาด (size) / ໜ່ວย (unit): ไล่ chain category -> material
+    const categoryId = item.category?.id ?? item.categoryId;
+    if (categoryId) {
+      const cat = allCategories.find((c) => c.id === categoryId);
+      if (cat?.material?.imageUrl) return cat.material.imageUrl;
+      if (cat?.material?.name) {
+        const mat = materials.find((m) => m.name === cat.material.name);
+        if (mat?.imageUrl) return mat.imageUrl;
+      }
+    }
+
+    return null;
+  };
+
   // 🟢 ฟังก์ชันสำหรับ render รูปภาพ
   const renderImage = (imageUrl, name) => {
     if (imageUrl) {
@@ -261,6 +313,7 @@ const handleSubmit = async (e) => {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
+                <div className="flex-shrink-0">{renderImage(getRelatedImageUrl(item), item.materialName)}</div>
                 <span className="text-xs text-gray-400">#{item.id}</span>
                 <span className="font-semibold text-gray-800">{item.materialName}</span>
               </div>
@@ -307,11 +360,9 @@ const handleSubmit = async (e) => {
       <div className="bg-white rounded-xl border border-gray-200 p-4 mb-3 shadow-sm">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3 flex-1">
-            {activeTab === "material" && (
-              <div className="flex-shrink-0">
-                {renderImage(item.imageUrl, item.name)}
-              </div>
-            )}
+            <div className="flex-shrink-0">
+              {renderImage(activeTab === "material" ? item.imageUrl : getRelatedImageUrl(item), item.name)}
+            </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-400">#{item.id}</span>
@@ -607,11 +658,11 @@ const handleSubmit = async (e) => {
           <>
             {/* 🟢 Desktop Table - ซ่อนบนจอเล็ก */}
             <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-left text-sm text-gray-600">
+              <table className="w-full min-w-max whitespace-nowrap text-left text-sm text-gray-600">
                 <thead className="bg-gray-50 border-b border-gray-200 text-gray-700 uppercase text-xs">
                   <tr>
                     <th className="px-3 py-2.5">ID</th>
-                    {activeTab === "material" && <th className="px-3 py-2.5">ຮູບພາບ</th>}
+                    <th className="px-3 py-2.5">ຮູບພາບ</th>
                     {(activeTab === "stock" || activeTab === "import") ? (
                       <>
                         <th className="px-3 py-2.5">ວັດຖຸດິບ</th>
@@ -640,9 +691,12 @@ const handleSubmit = async (e) => {
                   {items.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50 transition">
                       <td className="px-3 py-2.5 font-medium text-gray-900">{item.id}</td>
-                      {activeTab === "material" && (
-                        <td className="px-3 py-2.5">{renderImage(item.imageUrl, item.name)}</td>
-                      )}
+                      <td className="px-3 py-2.5">
+                        {renderImage(
+                          activeTab === "material" ? item.imageUrl : getRelatedImageUrl(item),
+                          item.name || item.materialName
+                        )}
+                      </td>
                       {(activeTab === "stock" || activeTab === "import") ? (
                         <>
                           <td className="px-3 py-2.5 font-semibold text-gray-800">{item.materialName}</td>

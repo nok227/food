@@ -21,6 +21,7 @@ exports.getStocks = async (req, res, next) => {
       return {
         id: s.id,
         materialName: s.material?.name || "-",
+        materialImageUrl: s.material?.imageUrl || null, // 🟢 ส่งรูปวัตถุดิบไปให้ frontend แสดงตรงๆ ในตาราง stock/import
         categoryName: s.category?.name || "-",
         sizeName: s.size?.name || "-",
         unitName: s.unit?.name || "-",

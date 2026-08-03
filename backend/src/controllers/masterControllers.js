@@ -76,7 +76,8 @@ exports.getSizes = catchAsync(async (req, res) => {
   const where = categoryId ? { categoryId: Number(categoryId) } : {};
   const data = await prisma.size.findMany({
     where,
-    include: { category: true },
+    // 🟢 ดึง category พร้อม material ต้นทาง ให้ frontend เอารูปวัตถุดิบไปแสดงได้เลย (item.category.material.imageUrl)
+    include: { category: { include: { material: true } } },
     orderBy: { id: "desc" },
   });
   res.json(data);
@@ -106,7 +107,8 @@ exports.getUnits = catchAsync(async (req, res) => {
 
   const data = await prisma.unit.findMany({
     where,
-    include: { category: true, size: true },
+    // 🟢 ดึง category พร้อม material ต้นทาง ให้ frontend เอารูปวัตถุดิบไปแสดงได้เลย (item.category.material.imageUrl)
+    include: { category: { include: { material: true } }, size: true },
     orderBy: { id: "desc" },
   });
   res.json(data);
