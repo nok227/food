@@ -4,9 +4,9 @@ import { masterAPI } from "../services/masterApi";
 import { stockAPI } from "../services/stockApi";
 
 function MasterDataPage() {
-  const [activeTab, setActiveTab] = useState("material"); // 'material' | 'category' | 'size' | 'unit' | 'stock' | 'import'
+  const [activeTab, setActiveTab] = useState("material");
   const [items, setItems] = useState([]);
-  const [stockList, setStockList] = useState([]); // ລາຍການສະຕັອກສຳລັບຟອມນຳເຂົ້າ
+  const [stockList, setStockList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
@@ -18,9 +18,7 @@ function MasterDataPage() {
 
   // Form Inputs
   const [inputName, setInputName] = useState("");
-  
-  // 🟢 State ສຳລັບການເລືອກຮູບພາບ (URL & File)
-  const [imageMode, setImageMode] = useState("url"); // 'url' | 'file'
+  const [imageMode, setImageMode] = useState("url");
   const [inputImageUrl, setInputImageUrl] = useState("");
   const [imageFile, setImageFile] = useState(null);
 
@@ -42,7 +40,6 @@ function MasterDataPage() {
     setMaterials(Array.isArray(data) ? data : []);
   };
 
-  // ດຶງຂໍ້ມູນ Stocks ເພື່ອນຳມາໃຊ້ໃນ Dropdown ຂອງ Tab Import
   const loadStocksList = async () => {
     try {
       const data = await stockAPI.getStocks();
@@ -85,7 +82,6 @@ function MasterDataPage() {
     }
   }, [selectedCategory, selectedSize]);
 
-  // ດຶງຂໍ້ມູນຕາມ Tab
   const fetchTabData = async () => {
     setLoading(true);
     try {
@@ -96,7 +92,7 @@ function MasterDataPage() {
       else if (activeTab === "unit") data = await masterAPI.getUnits();
       else if (activeTab === "stock") data = await stockAPI.getStocks();
       else if (activeTab === "import") {
-        data = await stockAPI.getStocks(); // ແທັບ Import ກໍສະແດງຕາຕະລາງ Stock ເຊັ່ນກັນ
+        data = await stockAPI.getStocks();
         loadStocksList();
       }
       setItems(Array.isArray(data) ? data : []);
@@ -132,7 +128,6 @@ function MasterDataPage() {
     setImportNote("");
   };
 
-  // 🟢 ຟັງຊັນແປງ File ຮູບພາບເປັນ Base64
   const convertBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const fileReader = new FileReader();
@@ -142,7 +137,6 @@ function MasterDataPage() {
     });
   };
 
-  // Submit บันทึกข้อมูล
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -164,13 +158,9 @@ function MasterDataPage() {
     try {
       if (activeTab === "material") {
         let finalImageUrl = inputImageUrl;
-
-        // ຖ້າເລືອກໂໝດໂຫຼດໄຟລ໌ ແລະ ມີການເລືອກໄຟລ໌ໄວ້
         if (imageMode === "file" && imageFile) {
           finalImageUrl = await convertBase64(imageFile);
         }
-
-        // 🟢 ສົ່ງທັງຊື່ ແລະ String ຮູບພາບໄປບັນທຶກ
         await masterAPI.createMaterial(inputName, finalImageUrl);
         loadMaterials();
       } else if (activeTab === "category") {
@@ -231,69 +221,144 @@ function MasterDataPage() {
     return "ນຳເຂົ້າວັດຖຸດິບ";
   };
 
+  // 🟢 ฟังก์ชันสำหรับ render รูปภาพ
+  const renderImage = (imageUrl, name) => {
+    if (imageUrl) {
+      return (
+        <img
+          src={imageUrl}
+          alt={name}
+          className="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded-lg border border-gray-200"
+        />
+      );
+    }
+    return <span className="text-gray-400 text-[10px] sm:text-xs">ບໍ່ມີຮູບ</span>;
+  };
+
+  // 🟢 ฟังก์ชัน render Mobile Card View
+  const renderMobileCard = (item) => {
+    if (activeTab === "stock" || activeTab === "import") {
+      return (
+        <div className="bg-white rounded-xl border border-gray-200 p-4 mb-3 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs text-gray-400">#{item.id}</span>
+                <span className="font-semibold text-gray-800">{item.materialName}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-1 text-xs">
+                <span className="text-gray-500">ປະເພດ:</span>
+                <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-center">
+                  {item.categoryName}
+                </span>
+                <span className="text-gray-500">ຂະໜາດ:</span>
+                <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-center">
+                  {item.sizeName}
+                </span>
+                <span className="text-gray-500">ໜ່ວຍ:</span>
+                <span className="text-purple-700 font-medium">{item.unitName}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-1 mt-3 text-xs">
+                <div className="bg-amber-50 p-2 rounded-lg text-center">
+                  <div className="text-amber-600 font-bold">{item.oldQuantity ?? 0}</div>
+                  <div className="text-[10px] text-gray-400">ເກົ່າ</div>
+                </div>
+                <div className="bg-blue-50 p-2 rounded-lg text-center">
+                  <div className="text-blue-600 font-bold">+{item.todayQuantity ?? 0}</div>
+                  <div className="text-[10px] text-gray-400">ມື້ນີ້</div>
+                </div>
+                <div className="bg-emerald-50 p-2 rounded-lg text-center">
+                  <div className="text-emerald-600 font-bold">{item.totalQuantity ?? 0}</div>
+                  <div className="text-[10px] text-gray-400">ທັງໝົດ</div>
+                </div>
+              </div>
+            </div>
+            <button 
+              onClick={() => handleDelete(item.id)} 
+              className="text-red-500 hover:text-red-700 text-sm font-medium ml-2"
+            >
+              ລົບ
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Master Data Mobile Card
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-3 shadow-sm">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3 flex-1">
+            {activeTab === "material" && (
+              <div className="flex-shrink-0">
+                {renderImage(item.imageUrl, item.name)}
+              </div>
+            )}
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400">#{item.id}</span>
+                <span className="font-semibold text-gray-800">{item.name}</span>
+              </div>
+              {activeTab === "category" && item.material && (
+                <span className="text-xs text-purple-600">{item.material.name}</span>
+              )}
+              {activeTab === "size" && item.category && (
+                <span className="text-xs text-amber-600">{item.category.name}</span>
+              )}
+              {activeTab === "unit" && (
+                <div className="flex gap-2 text-xs">
+                  {item.category && <span className="text-amber-600">{item.category.name}</span>}
+                  {item.size && <span className="text-blue-600">{item.size.name}</span>}
+                </div>
+              )}
+            </div>
+          </div>
+          <button 
+            onClick={() => handleDelete(item.id)} 
+            className="text-red-500 hover:text-red-700 text-sm font-medium ml-2"
+          >
+            ລົບ
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="flex flex-col gap-4 sm:gap-6 max-w-6xl mx-auto">
-      <h2 className="text-xl sm:text-2xl font-bold text-gray-800">ຈັດການຂໍ້ມູນ Master Data & Stock</h2>
+    <div className="flex flex-col gap-4 sm:gap-6 max-w-6xl mx-auto px-2 sm:px-4">
+      <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">ຈັດການຂໍ້ມູນ Master Data & Stock</h2>
 
-      {/* 🟢 1. Tabs Bar */}
-      <div className="flex border-b border-gray-200 overflow-x-auto">
-        <button
-          onClick={() => setActiveTab("material")}
-          className={`py-2.5 sm:py-3 px-3 sm:px-5 font-semibold text-xs sm:text-sm whitespace-nowrap border-b-2 transition ${
-            activeTab === "material" ? "border-amber-500 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          🥩 1. ຊື່ວັດຖຸດິບ
-        </button>
-        <button
-          onClick={() => setActiveTab("category")}
-          className={`py-2.5 sm:py-3 px-3 sm:px-5 font-semibold text-xs sm:text-sm whitespace-nowrap border-b-2 transition ${
-            activeTab === "category" ? "border-amber-500 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          🏷️ 2. ປະເພດ
-        </button>
-        <button
-          onClick={() => setActiveTab("size")}
-          className={`py-2.5 sm:py-3 px-3 sm:px-5 font-semibold text-xs sm:text-sm whitespace-nowrap border-b-2 transition ${
-            activeTab === "size" ? "border-amber-500 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          📐 3. ຂະໜາດ
-        </button>
-        <button
-          onClick={() => setActiveTab("unit")}
-          className={`py-2.5 sm:py-3 px-3 sm:px-5 font-semibold text-xs sm:text-sm whitespace-nowrap border-b-2 transition ${
-            activeTab === "unit" ? "border-amber-500 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          📦 4. ໜ່ວຍ
-        </button>
-        
-        {/* Tab Stock */}
-        <button
-          onClick={() => setActiveTab("stock")}
-          className={`py-2.5 sm:py-3 px-3 sm:px-5 font-semibold text-xs sm:text-sm whitespace-nowrap border-b-2 transition ${
-            activeTab === "stock" ? "border-emerald-500 text-emerald-600 font-bold" : "border-transparent text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          📊 5. ສະຕັອກ (Stock)
-        </button>
-
-        {/* Tab Import */}
-        <button
-          onClick={() => setActiveTab("import")}
-          className={`py-2.5 sm:py-3 px-3 sm:px-5 font-semibold text-xs sm:text-sm whitespace-nowrap border-b-2 transition ${
-            activeTab === "import" ? "border-blue-600 text-blue-600 font-bold" : "border-transparent text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          📥 6. ນຳເຂົ້າ (Import)
-        </button>
+      {/* 🟢 1. Tabs Bar - ปรับให้เลื่อนแนวนอนได้ */}
+      <div className="flex border-b border-gray-200 overflow-x-auto pb-1 gap-0.5 sm:gap-0">
+        {[
+          { key: "material", label: "🥩 1. ວັດຖຸດິບ", color: "amber" },
+          { key: "category", label: "🏷️ 2. ປະເພດ", color: "amber" },
+          { key: "size", label: "📐 3. ຂະໜາດ", color: "amber" },
+          { key: "unit", label: "📦 4. ໜ່ວຍ", color: "amber" },
+          { key: "stock", label: "📊 5. ສະຕັອກ", color: "emerald" },
+          { key: "import", label: "📥 6. ນຳເຂົ້າ", color: "blue" },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`py-2 px-2.5 sm:px-4 md:px-5 font-semibold text-[11px] sm:text-xs md:text-sm whitespace-nowrap border-b-2 transition flex-shrink-0 ${
+              activeTab === tab.key 
+                ? tab.color === "emerald" 
+                  ? "border-emerald-500 text-emerald-600" 
+                  : tab.color === "blue"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-amber-500 text-amber-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* 🟢 2. Action Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
-        <h3 className="text-base sm:text-lg font-bold text-gray-700">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <h3 className="text-sm sm:text-base md:text-lg font-bold text-gray-700 truncate">
           {activeTab === "import" ? "ລາຍການສະຕັອກ & ຟອມນຳເຂົ້າ" : `ລາຍການ ${getTabTitle()}`}
         </h3>
         <button
@@ -302,26 +367,24 @@ function MasterDataPage() {
             activeTab === "import" ? "bg-blue-600 hover:bg-blue-700" : "bg-amber-500 hover:bg-amber-600"
           }`}
         >
-          {showForm ? "✕ ປິດຟອມ" : `+ ${activeTab === "import" ? "ນຳເຂົ້າວັດຖຸດິບ" : `ບັນທຶກ${getTabTitle()}`}`}
+          {showForm ? "✕ ປິດຟອມ" : `+ ${activeTab === "import" ? "ນຳເຂົ້າ" : `ບັນທຶກ${getTabTitle()}`}`}
         </button>
       </div>
 
-      {/* 🟢 3. Dynamic Form */}
+      {/* 🟢 3. Dynamic Form - ปรับ responsive */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-white p-3 sm:p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-3 sm:gap-4">
-          
-          {/* 🟢 ຟອມສຳລັບ Tab Import (ນຳເຂົ້າ) */}
+        <form onSubmit={handleSubmit} className="bg-white p-3 sm:p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-3">
           {activeTab === "import" ? (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-gray-600">ເລືອກວັດຖຸດິບໃນສະຕັອກ</label>
+                <label className="text-xs font-semibold text-gray-600">ເລືອກສະຕັອກ</label>
                 <select
                   required
                   value={importStockId}
                   onChange={(e) => setImportStockId(e.target.value)}
                   className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400"
                 >
-                  <option value="">-- ເລືອກລາຍການສະຕັອກ --</option>
+                  <option value="">-- ເລືອກ --</option>
                   {stockList.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.materialName} - {s.categoryName} ({s.sizeName !== "-" ? s.sizeName : ""} {s.unitName})
@@ -329,9 +392,8 @@ function MasterDataPage() {
                   ))}
                 </select>
               </div>
-
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-gray-600">ຈຳນວນທີ່ນຳເຂົ້າ</label>
+                <label className="text-xs font-semibold text-gray-600">ຈຳນວນ</label>
                 <input
                   type="number"
                   min="0.01"
@@ -343,12 +405,11 @@ function MasterDataPage() {
                   className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400"
                 />
               </div>
-
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-gray-600">ໝາຍເຫດ (ຖ້າມີ)</label>
+                <label className="text-xs font-semibold text-gray-600">ໝາຍເຫດ</label>
                 <input
                   type="text"
-                  placeholder="ເຊັ່ນ: ຊື້ເພີ່ມຈາກຕະຫຼາດ"
+                  placeholder="ເຊັ່ນ: ຊື້ເພີ່ມ..."
                   value={importNote}
                   onChange={(e) => setImportNote(e.target.value)}
                   className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400"
@@ -356,18 +417,17 @@ function MasterDataPage() {
               </div>
             </div>
           ) : (
-            /* 🟢 ຟອມປົກຕິສຳລັບ Master Data & Stock */
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {(activeTab === "category" || activeTab === "size" || activeTab === "unit" || activeTab === "stock") && (
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-gray-600">1. ເລືອກວັດຖຸດິບ</label>
+                  <label className="text-xs font-semibold text-gray-600">1. ວັດຖຸດິບ</label>
                   <select
                     required
                     value={selectedMaterial}
                     onChange={(e) => setSelectedMaterial(e.target.value)}
                     className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400"
                   >
-                    <option value="">-- ເລືອກວັດຖຸດິບ --</option>
+                    <option value="">-- ເລືອກ --</option>
                     {materials.map((m) => (
                       <option key={m.id} value={m.id}>{m.name}</option>
                     ))}
@@ -377,7 +437,7 @@ function MasterDataPage() {
 
               {(activeTab === "size" || activeTab === "unit" || activeTab === "stock") && (
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-gray-600">2. ເລືອກປະເພດ</label>
+                  <label className="text-xs font-semibold text-gray-600">2. ປະເພດ</label>
                   <select
                     required
                     disabled={!selectedMaterial}
@@ -385,7 +445,7 @@ function MasterDataPage() {
                     onChange={(e) => setSelectedCategory(e.target.value)}
                     className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 disabled:bg-gray-100"
                   >
-                    <option value="">{!selectedMaterial ? "-- ເລືອກວັດຖຸດິບກ່ອນ --" : "-- ເລືອກປະເພດ --"}</option>
+                    <option value="">{!selectedMaterial ? "-- ເລືອກວັດຖຸດິບກ່ອນ --" : "-- ເລືອກ --"}</option>
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
@@ -395,7 +455,7 @@ function MasterDataPage() {
 
               {(activeTab === "unit" || activeTab === "stock") && (
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-gray-600">3. ເລືອກຂະໜາດ</label>
+                  <label className="text-xs font-semibold text-gray-600">3. ຂະໜາດ</label>
                   <select
                     required={activeTab === "unit"}
                     disabled={!selectedCategory}
@@ -403,7 +463,7 @@ function MasterDataPage() {
                     onChange={(e) => setSelectedSize(e.target.value)}
                     className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 disabled:bg-gray-100"
                   >
-                    <option value="">{!selectedCategory ? "-- ເລືອກປະເພດກ່ອນ --" : "-- ເລືອກຂະໜາດ --"}</option>
+                    <option value="">{!selectedCategory ? "-- ເລືອກປະເພດກ່ອນ --" : "-- ເລືອກ --"}</option>
                     {availableSizes.map((s) => (
                       <option key={s.id} value={s.id}>{s.name}</option>
                     ))}
@@ -412,35 +472,34 @@ function MasterDataPage() {
               )}
 
               {activeTab === "stock" && (
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-gray-600">4. ເລືອກໜ່ວຍ</label>
-                  <select
-                    required
-                    disabled={!selectedCategory}
-                    value={selectedUnit}
-                    onChange={(e) => setSelectedUnit(e.target.value)}
-                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 disabled:bg-gray-100"
-                  >
-                    <option value="">{!selectedCategory ? "-- ເລືອກປະເພດກ່ອນ --" : "-- ເລືອກໜ່ວຍ --"}</option>
-                    {availableUnits.map((u) => (
-                      <option key={u.id} value={u.id}>{u.name}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {activeTab === "stock" && (
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-gray-600">5. ຈຳນວນເລີ່ມຕົ້ນ</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    value={initialQuantity}
-                    onChange={(e) => setInitialQuantity(e.target.value)}
-                    className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-amber-400"
-                  />
-                </div>
+                <>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-semibold text-gray-600">4. ໜ່ວຍ</label>
+                    <select
+                      required
+                      disabled={!selectedCategory}
+                      value={selectedUnit}
+                      onChange={(e) => setSelectedUnit(e.target.value)}
+                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 disabled:bg-gray-100"
+                    >
+                      <option value="">{!selectedCategory ? "-- ເລືອກປະເພດກ່ອນ --" : "-- ເລືອກ --"}</option>
+                      {availableUnits.map((u) => (
+                        <option key={u.id} value={u.id}>{u.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-semibold text-gray-600">5. ຈຳນວນເລີ່ມຕົ້ນ</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={initialQuantity}
+                      onChange={(e) => setInitialQuantity(e.target.value)}
+                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400"
+                    />
+                  </div>
+                </>
               )}
 
               {activeTab !== "stock" && (
@@ -456,56 +515,51 @@ function MasterDataPage() {
                     required
                     value={inputName}
                     onChange={(e) => setInputName(e.target.value)}
-                    placeholder={`ປ້ອນຊື່ ${getTabTitle()}...`}
-                    className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-amber-400"
+                    placeholder={`ປ້ອນຊື່...`}
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400"
                   />
                 </div>
               )}
 
-              {/* 🟢 ສ່ວນເລືອກຮູບພາບແບບ 2 ເອັບຊັນ (เฉพาะ Tab Material) */}
               {activeTab === "material" && (
                 <div className="flex flex-col gap-1 sm:col-span-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-gray-600">ຮູບພາບວັດຖຸດິບ (ຖ້າມີ)</label>
-                    
-                    {/* ປຸ່ມ Toggle ເລືອກໂໝດ */}
-                    <div className="flex gap-1.5 text-xs bg-gray-100 p-0.5 rounded-lg">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <label className="text-xs font-semibold text-gray-600">ຮູບພາບ</label>
+                    <div className="flex gap-1 text-xs bg-gray-100 p-0.5 rounded-lg">
                       <button
                         type="button"
                         onClick={() => setImageMode("url")}
                         className={`px-2 py-0.5 rounded-md font-medium transition ${
-                          imageMode === "url" ? "bg-white text-amber-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                          imageMode === "url" ? "bg-white text-amber-600 shadow-sm" : "text-gray-500"
                         }`}
                       >
-                        🔗 ວາງລິ້ງ URL
+                        🔗 URL
                       </button>
                       <button
                         type="button"
                         onClick={() => setImageMode("file")}
                         className={`px-2 py-0.5 rounded-md font-medium transition ${
-                          imageMode === "file" ? "bg-white text-amber-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                          imageMode === "file" ? "bg-white text-amber-600 shadow-sm" : "text-gray-500"
                         }`}
                       >
-                        📁 ໂຫຼດຈາກເຄື່ອງ
+                        📁 ໄຟລ໌
                       </button>
                     </div>
                   </div>
-
-                  {/* ແຍກ Input ຕາມ Toggle Mode */}
                   {imageMode === "url" ? (
                     <input
                       type="url"
                       value={inputImageUrl}
                       onChange={(e) => setInputImageUrl(e.target.value)}
                       placeholder="https://example.com/image.jpg"
-                      className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-amber-400"
+                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400"
                     />
                   ) : (
                     <input
                       type="file"
                       accept="image/*"
                       onChange={(e) => setImageFile(e.target.files[0])}
-                      className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer"
+                      className="border border-gray-300 rounded-lg px-2 py-1 text-sm file:mr-2 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer"
                     />
                   )}
                 </div>
@@ -516,7 +570,7 @@ function MasterDataPage() {
           <button
             type="submit"
             disabled={submitting}
-            className={`w-full sm:self-end sm:w-auto px-6 py-2 text-white rounded-lg text-sm font-semibold transition disabled:opacity-50 ${
+            className={`w-full sm:w-auto px-6 py-2 text-white rounded-lg text-sm font-semibold transition disabled:opacity-50 ${
               activeTab === "import" ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"
             }`}
           >
@@ -525,133 +579,109 @@ function MasterDataPage() {
         </form>
       )}
 
-      {/* 🟢 4. Table Display */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+      {/* 🟢 4. Table Display - Responsive Desktop + Mobile Card */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         {loading ? (
-          <div className="p-6 sm:p-8 text-center text-gray-400 text-sm">ກໍາລັງໂຫລດຂໍ້ມູນ...</div>
+          <div className="p-6 text-center text-gray-400 text-sm">ກໍາລັງໂຫລດຂໍ້ມູນ...</div>
         ) : items.length === 0 ? (
-          <div className="p-6 sm:p-8 text-center text-gray-400 text-sm">ບໍ່ມີຂໍ້ມູນ {getTabTitle()}</div>
+          <div className="p-6 text-center text-gray-400 text-sm">ບໍ່ມີຂໍ້ມູນ {getTabTitle()}</div>
         ) : (
-          <div className="overflow-x-auto rounded-xl">
-            <table className="w-full text-left text-sm text-gray-600">
-              <thead className="bg-gray-50 border-b border-gray-200 text-gray-700 uppercase text-xs">
-                <tr>
-                  <th className="px-2.5 sm:px-5 py-2 sm:py-3">ID</th>
-
-                  {/* 🟢 คอลัมน์รูปภาพสำหรับ Tab Material */}
-                  {activeTab === "material" && <th className="px-3 sm:px-6 py-2 sm:py-3">ຮູບພາບ</th>}
-
-                  {(activeTab === "stock" || activeTab === "import") ? (
-                    <>
-                      <th className="px-2.5 sm:px-5 py-2 sm:py-3">ວັດຖຸດິບ</th>
-                      <th className="px-2.5 sm:px-5 py-2 sm:py-3">ປະເພດ</th>
-                      <th className="px-2.5 sm:px-5 py-2 sm:py-3">ຂະໜາດ</th>
-                      <th className="px-2.5 sm:px-5 py-2 sm:py-3">ໜ່ວຍ</th>
-                      
-                      <th className="px-2.5 sm:px-5 py-2 sm:py-3 text-amber-700 bg-amber-50">ຈຳນວນເກົ່າ</th>
-                      <th className="px-2.5 sm:px-5 py-2 sm:py-3 text-blue-700 bg-blue-50">ຈຳນວນເພີ່ມມື້ນີ້</th>
-                      <th className="px-2.5 sm:px-5 py-2 sm:py-3 text-emerald-700 bg-emerald-50">ຈຳນວນທັງໝົດ</th>
-                    </>
-                  ) : (
-                    <th className="px-3 sm:px-6 py-2 sm:py-3">ຊື່ {getTabTitle()}</th>
-                  )}
-
-                  {activeTab === "category" && <th className="px-3 sm:px-6 py-2 sm:py-3">ວັດຖຸດິບ</th>}
-                  {activeTab === "size" && <th className="px-3 sm:px-6 py-2 sm:py-3">ປະເພດ</th>}
-                  {activeTab === "unit" && (
-                    <>
-                      <th className="px-3 sm:px-6 py-2 sm:py-3">ປະເພດ</th>
-                      <th className="px-3 sm:px-6 py-2 sm:py-3">ຂະໜາດ</th>
-                    </>
-                  )}
-                  <th className="px-2.5 sm:px-5 py-2 sm:py-3 text-right">ຈັດການ</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {items.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50 transition">
-                    <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-medium text-gray-900">{item.id}</td>
-
-                    {/* 🟢 แสดงรูปภาพขนาดเล็กใน Tab Material */}
-                    {activeTab === "material" && (
-                      <td className="px-3 sm:px-6 py-2 sm:py-4">
-                        {item.imageUrl ? (
-                          <img
-                            src={item.imageUrl}
-                            alt={item.name}
-                            className="w-10 h-10 object-cover rounded-lg border border-gray-200"
-                          />
-                        ) : (
-                          <span className="text-gray-400 text-xs">ບໍ່ມີຮູບ</span>
-                        )}
-                      </td>
-                    )}
-
-                    {/* Stock / Import Table Layout */}
+          <>
+            {/* 🟢 Desktop Table - ซ่อนบนจอเล็ก */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-sm text-gray-600">
+                <thead className="bg-gray-50 border-b border-gray-200 text-gray-700 uppercase text-xs">
+                  <tr>
+                    <th className="px-3 py-2.5">ID</th>
+                    {activeTab === "material" && <th className="px-3 py-2.5">ຮູບພາບ</th>}
                     {(activeTab === "stock" || activeTab === "import") ? (
                       <>
-                        <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-semibold text-gray-800">{item.materialName}</td>
-                        <td className="px-2.5 sm:px-5 py-2 sm:py-4">
-                          <span className="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-medium">
-                            {item.categoryName}
-                          </span>
-                        </td>
-                        <td className="px-2.5 sm:px-5 py-2 sm:py-4">
-                          <span className="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-medium">
-                            {item.sizeName}
-                          </span>
-                        </td>
-                        <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-medium text-purple-700">
-                          {item.unitName}
-                        </td>
-
-                        <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-bold text-amber-600 bg-amber-50/50">
-                          {item.oldQuantity ?? 0}
-                        </td>
-                        <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-bold text-blue-600 bg-blue-50/50">
-                          +{item.todayQuantity ?? 0}
-                        </td>
-                        <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-bold text-emerald-600 bg-emerald-50/50">
-                          {item.totalQuantity ?? 0}
-                        </td>
+                        <th className="px-3 py-2.5">ວັດຖຸດິບ</th>
+                        <th className="px-3 py-2.5">ປະເພດ</th>
+                        <th className="px-3 py-2.5">ຂະໜາດ</th>
+                        <th className="px-3 py-2.5">ໜ່ວຍ</th>
+                        <th className="px-3 py-2.5 text-amber-700 bg-amber-50">ເກົ່າ</th>
+                        <th className="px-3 py-2.5 text-blue-700 bg-blue-50">ມື້ນີ້</th>
+                        <th className="px-3 py-2.5 text-emerald-700 bg-emerald-50">ທັງໝົດ</th>
                       </>
                     ) : (
-                      <td className="px-3 sm:px-6 py-2 sm:py-4 font-semibold text-gray-800">{item.name}</td>
+                      <th className="px-3 py-2.5">ຊື່</th>
                     )}
-
-                    {activeTab === "category" && (
-                      <td className="px-3 sm:px-6 py-2 sm:py-4">
-                        {item.material ? <span className="bg-purple-100 text-purple-800 text-xs px-2.5 py-1 rounded-full font-medium">{item.material.name}</span> : "-"}
-                      </td>
-                    )}
-
-                    {activeTab === "size" && (
-                      <td className="px-3 sm:px-6 py-2 sm:py-4">
-                        {item.category ? <span className="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-medium">{item.category.name}</span> : "-"}
-                      </td>
-                    )}
-
+                    {activeTab === "category" && <th className="px-3 py-2.5">ວັດຖຸດິບ</th>}
+                    {activeTab === "size" && <th className="px-3 py-2.5">ປະເພດ</th>}
                     {activeTab === "unit" && (
                       <>
-                        <td className="px-3 sm:px-6 py-2 sm:py-4">
-                          {item.category ? <span className="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-medium">{item.category.name}</span> : "-"}
-                        </td>
-                        <td className="px-3 sm:px-6 py-2 sm:py-4">
-                          {item.size ? <span className="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-medium">{item.size.name}</span> : "-"}
-                        </td>
+                        <th className="px-3 py-2.5">ປະເພດ</th>
+                        <th className="px-3 py-2.5">ຂະໜາດ</th>
                       </>
                     )}
-
-                    <td className="px-2.5 sm:px-5 py-2 sm:py-4 text-right">
-                      <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:text-red-700 font-medium transition">
-                        ລົບ
-                      </button>
-                    </td>
+                    <th className="px-3 py-2.5 text-right">ຈັດການ</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {items.map((item) => (
+                    <tr key={item.id} className="hover:bg-gray-50 transition">
+                      <td className="px-3 py-2.5 font-medium text-gray-900">{item.id}</td>
+                      {activeTab === "material" && (
+                        <td className="px-3 py-2.5">{renderImage(item.imageUrl, item.name)}</td>
+                      )}
+                      {(activeTab === "stock" || activeTab === "import") ? (
+                        <>
+                          <td className="px-3 py-2.5 font-semibold text-gray-800">{item.materialName}</td>
+                          <td className="px-3 py-2.5">
+                            <span className="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full">
+                              {item.categoryName}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">
+                              {item.sizeName}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5 font-medium text-purple-700">{item.unitName}</td>
+                          <td className="px-3 py-2.5 font-bold text-amber-600 bg-amber-50/50">{item.oldQuantity ?? 0}</td>
+                          <td className="px-3 py-2.5 font-bold text-blue-600 bg-blue-50/50">+{item.todayQuantity ?? 0}</td>
+                          <td className="px-3 py-2.5 font-bold text-emerald-600 bg-emerald-50/50">{item.totalQuantity ?? 0}</td>
+                        </>
+                      ) : (
+                        <td className="px-3 py-2.5 font-semibold text-gray-800">{item.name}</td>
+                      )}
+                      {activeTab === "category" && (
+                        <td className="px-3 py-2.5">
+                          {item.material ? <span className="bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded-full">{item.material.name}</span> : "-"}
+                        </td>
+                      )}
+                      {activeTab === "size" && (
+                        <td className="px-3 py-2.5">
+                          {item.category ? <span className="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full">{item.category.name}</span> : "-"}
+                        </td>
+                      )}
+                      {activeTab === "unit" && (
+                        <>
+                          <td className="px-3 py-2.5">
+                            {item.category ? <span className="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full">{item.category.name}</span> : "-"}
+                          </td>
+                          <td className="px-3 py-2.5">
+                            {item.size ? <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">{item.size.name}</span> : "-"}
+                          </td>
+                        </>
+                      )}
+                      <td className="px-3 py-2.5 text-right">
+                        <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:text-red-700 font-medium transition text-sm">
+                           ລົບ
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 🟢 Mobile Card View - แสดงบนจอเล็ก */}
+            <div className="md:hidden p-3">
+              {items.map((item) => renderMobileCard(item))}
+            </div>
+          </>
         )}
       </div>
     </div>
