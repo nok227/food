@@ -18,6 +18,7 @@ function MasterDataPage() {
 
   // Form Inputs
   const [inputName, setInputName] = useState("");
+  const [inputImageUrl, setInputImageUrl] = useState(""); // 🟢 เพิ่ม State สำหรับ URL รูปภาพ
   const [selectedMaterial, setSelectedMaterial] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
@@ -113,6 +114,7 @@ function MasterDataPage() {
 
   const resetForm = () => {
     setInputName("");
+    setInputImageUrl(""); // 🟢 ล้างค่า URL รูปภาพ
     setSelectedMaterial("");
     setSelectedCategory("");
     setSelectedSize("");
@@ -144,7 +146,8 @@ function MasterDataPage() {
     setSubmitting(true);
     try {
       if (activeTab === "material") {
-        await masterAPI.createMaterial(inputName);
+        // 🟢 ส่งทั้งชื่อและ URL รูปภาพไปบันทึก
+        await masterAPI.createMaterial(inputName, inputImageUrl);
         loadMaterials();
       } else if (activeTab === "category") {
         await masterAPI.createCategory(inputName, selectedMaterial);
@@ -161,7 +164,6 @@ function MasterDataPage() {
           initialQuantity: parseFloat(initialQuantity) || 0,
         });
       } else if (activeTab === "import") {
-        // 🟢 ເອີ້ນໃຊ້ API ນຳເຂົ້າ
         await stockAPI.importStock(
           importStockId,
           parseFloat(importQuantity),
@@ -254,7 +256,7 @@ function MasterDataPage() {
           📊 5. ສະຕັອກ (Stock)
         </button>
 
-        {/* 🟢 ເພີ່ມ Tab Import ໄວ້ຂ້າງ Stock */}
+        {/* Tab Import */}
         <button
           onClick={() => setActiveTab("import")}
           className={`py-2.5 sm:py-3 px-3 sm:px-5 font-semibold text-xs sm:text-sm whitespace-nowrap border-b-2 transition ${
@@ -266,7 +268,6 @@ function MasterDataPage() {
       </div>
 
       {/* 🟢 2. Action Header */}
-      {/* จอเล็ก: เรียงเป็นแนวตั้ง ปุ่มเต็มความกว้าง / จอใหญ่ (sm+): เรียงแนวนอนเหมือนเดิม */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
         <h3 className="text-base sm:text-lg font-bold text-gray-700">
           {activeTab === "import" ? "ລາຍການສະຕັອກ & ຟອມນຳເຂົ້າ" : `ລາຍການ ${getTabTitle()}`}
@@ -436,6 +437,20 @@ function MasterDataPage() {
                   />
                 </div>
               )}
+
+              {/* 🟢 ช่องใส่ URL รูปภาพ (เฉพาะ Tab Material) */}
+              {activeTab === "material" && (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-gray-600">URL ຮູບພາບວັດຖຸດິບ (ຖ້າມີ)</label>
+                  <input
+                    type="url"
+                    value={inputImageUrl}
+                    onChange={(e) => setInputImageUrl(e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                    className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-amber-400"
+                  />
+                </div>
+              )}
             </div>
           )}
 
@@ -452,11 +467,6 @@ function MasterDataPage() {
       )}
 
       {/* 🟢 4. Table Display */}
-      {/* 
-        rounded-xl + border อยู่ที่กล่องนอกสุด (ไม่มี overflow-hidden แล้ว)
-        ส่วน overflow-x-auto อยู่ที่กล่องด้านใน -> ตารางกว้าง (เยอะคอลัมน์อย่าง stock/import)
-        จะเลื่อนซ้าย-ขวาได้บนจอเล็ก โดยไม่ทำให้ layout หน้าเว็บพังหรือถูกตัด
-      */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
         {loading ? (
           <div className="p-6 sm:p-8 text-center text-gray-400 text-sm">ກໍາລັງໂຫລດຂໍ້ມູນ...</div>
@@ -464,107 +474,124 @@ function MasterDataPage() {
           <div className="p-6 sm:p-8 text-center text-gray-400 text-sm">ບໍ່ມີຂໍ້ມູນ {getTabTitle()}</div>
         ) : (
           <div className="overflow-x-auto rounded-xl">
-          <table className="w-full text-left text-sm text-gray-600">
-            <thead className="bg-gray-50 border-b border-gray-200 text-gray-700 uppercase text-xs">
-              <tr>
-                <th className="px-2.5 sm:px-5 py-2 sm:py-3">ID</th>
-                {(activeTab === "stock" || activeTab === "import") ? (
-                  <>
-                    <th className="px-2.5 sm:px-5 py-2 sm:py-3">ວັດຖຸດິບ</th>
-                    <th className="px-2.5 sm:px-5 py-2 sm:py-3">ປະເພດ</th>
-                    <th className="px-2.5 sm:px-5 py-2 sm:py-3">ຂະໜາດ</th>
-                    <th className="px-2.5 sm:px-5 py-2 sm:py-3">ໜ່ວຍ</th>
-                    
-                    {/* 🟢 ຄໍລຳປັບປຸງໃໝ່ຕາມຄວາມຕ້ອງການ */}
-                    <th className="px-2.5 sm:px-5 py-2 sm:py-3 text-amber-700 bg-amber-50">ຈຳນວນເກົ່າ</th>
-                    <th className="px-2.5 sm:px-5 py-2 sm:py-3 text-blue-700 bg-blue-50">ຈຳນວນເພີ່ມມື້ນີ້</th>
-                    <th className="px-2.5 sm:px-5 py-2 sm:py-3 text-emerald-700 bg-emerald-50">ຈຳນວນທັງໝົດ</th>
-                  </>
-                ) : (
-                  <th className="px-3 sm:px-6 py-2 sm:py-3">ຊື່ {getTabTitle()}</th>
-                )}
+            <table className="w-full text-left text-sm text-gray-600">
+              <thead className="bg-gray-50 border-b border-gray-200 text-gray-700 uppercase text-xs">
+                <tr>
+                  <th className="px-2.5 sm:px-5 py-2 sm:py-3">ID</th>
 
-                {activeTab === "category" && <th className="px-3 sm:px-6 py-2 sm:py-3">ວັດຖຸດິບ</th>}
-                {activeTab === "size" && <th className="px-3 sm:px-6 py-2 sm:py-3">ປະເພດ</th>}
-                {activeTab === "unit" && (
-                  <>
-                    <th className="px-3 sm:px-6 py-2 sm:py-3">ປະເພດ</th>
-                    <th className="px-3 sm:px-6 py-2 sm:py-3">ຂະໜາດ</th>
-                  </>
-                )}
-                <th className="px-2.5 sm:px-5 py-2 sm:py-3 text-right">ຈັດການ</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {items.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50 transition">
-                  <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-medium text-gray-900">{item.id}</td>
+                  {/* 🟢 คอลัมน์รูปภาพสำหรับ Tab Material */}
+                  {activeTab === "material" && <th className="px-3 sm:px-6 py-2 sm:py-3">ຮູບພາບ</th>}
 
-                  {/* Stock / Import Table Layout */}
                   {(activeTab === "stock" || activeTab === "import") ? (
                     <>
-                      <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-semibold text-gray-800">{item.materialName}</td>
-                      <td className="px-2.5 sm:px-5 py-2 sm:py-4">
-                        <span className="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-medium">
-                          {item.categoryName}
-                        </span>
-                      </td>
-                      <td className="px-2.5 sm:px-5 py-2 sm:py-4">
-                        <span className="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-medium">
-                          {item.sizeName}
-                        </span>
-                      </td>
-                      <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-medium text-purple-700">
-                        {item.unitName}
-                      </td>
-
-                      {/* 🟢 แสดง 3 ช่องจำนวนแบบชัดเจน */}
-                      <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-bold text-amber-600 bg-amber-50/50">
-                        {item.oldQuantity ?? 0}
-                      </td>
-                      <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-bold text-blue-600 bg-blue-50/50">
-                        +{item.todayQuantity ?? 0}
-                      </td>
-                      <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-bold text-emerald-600 bg-emerald-50/50">
-                        {item.totalQuantity ?? 0}
-                      </td>
+                      <th className="px-2.5 sm:px-5 py-2 sm:py-3">ວັດຖຸດິບ</th>
+                      <th className="px-2.5 sm:px-5 py-2 sm:py-3">ປະເພດ</th>
+                      <th className="px-2.5 sm:px-5 py-2 sm:py-3">ຂະໜາດ</th>
+                      <th className="px-2.5 sm:px-5 py-2 sm:py-3">ໜ່ວຍ</th>
+                      
+                      <th className="px-2.5 sm:px-5 py-2 sm:py-3 text-amber-700 bg-amber-50">ຈຳນວນເກົ່າ</th>
+                      <th className="px-2.5 sm:px-5 py-2 sm:py-3 text-blue-700 bg-blue-50">ຈຳນວນເພີ່ມມື້ນີ້</th>
+                      <th className="px-2.5 sm:px-5 py-2 sm:py-3 text-emerald-700 bg-emerald-50">ຈຳນວນທັງໝົດ</th>
                     </>
                   ) : (
-                    <td className="px-3 sm:px-6 py-2 sm:py-4 font-semibold text-gray-800">{item.name}</td>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3">ຊື່ {getTabTitle()}</th>
                   )}
 
-                  {activeTab === "category" && (
-                    <td className="px-3 sm:px-6 py-2 sm:py-4">
-                      {item.material ? <span className="bg-purple-100 text-purple-800 text-xs px-2.5 py-1 rounded-full font-medium">{item.material.name}</span> : "-"}
-                    </td>
-                  )}
-
-                  {activeTab === "size" && (
-                    <td className="px-3 sm:px-6 py-2 sm:py-4">
-                      {item.category ? <span className="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-medium">{item.category.name}</span> : "-"}
-                    </td>
-                  )}
-
+                  {activeTab === "category" && <th className="px-3 sm:px-6 py-2 sm:py-3">ວັດຖຸດິບ</th>}
+                  {activeTab === "size" && <th className="px-3 sm:px-6 py-2 sm:py-3">ປະເພດ</th>}
                   {activeTab === "unit" && (
                     <>
+                      <th className="px-3 sm:px-6 py-2 sm:py-3">ປະເພດ</th>
+                      <th className="px-3 sm:px-6 py-2 sm:py-3">ຂະໜາດ</th>
+                    </>
+                  )}
+                  <th className="px-2.5 sm:px-5 py-2 sm:py-3 text-right">ຈັດການ</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {items.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50 transition">
+                    <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-medium text-gray-900">{item.id}</td>
+
+                    {/* 🟢 แสดงรูปภาพขนาดเล็กใน Tab Material */}
+                    {activeTab === "material" && (
+                      <td className="px-3 sm:px-6 py-2 sm:py-4">
+                        {item.imageUrl ? (
+                          <img
+                            src={item.imageUrl}
+                            alt={item.name}
+                            className="w-10 h-10 object-cover rounded-lg border border-gray-200"
+                          />
+                        ) : (
+                          <span className="text-gray-400 text-xs">ບໍ່ມີຮູບ</span>
+                        )}
+                      </td>
+                    )}
+
+                    {/* Stock / Import Table Layout */}
+                    {(activeTab === "stock" || activeTab === "import") ? (
+                      <>
+                        <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-semibold text-gray-800">{item.materialName}</td>
+                        <td className="px-2.5 sm:px-5 py-2 sm:py-4">
+                          <span className="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-medium">
+                            {item.categoryName}
+                          </span>
+                        </td>
+                        <td className="px-2.5 sm:px-5 py-2 sm:py-4">
+                          <span className="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-medium">
+                            {item.sizeName}
+                          </span>
+                        </td>
+                        <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-medium text-purple-700">
+                          {item.unitName}
+                        </td>
+
+                        <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-bold text-amber-600 bg-amber-50/50">
+                          {item.oldQuantity ?? 0}
+                        </td>
+                        <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-bold text-blue-600 bg-blue-50/50">
+                          +{item.todayQuantity ?? 0}
+                        </td>
+                        <td className="px-2.5 sm:px-5 py-2 sm:py-4 font-bold text-emerald-600 bg-emerald-50/50">
+                          {item.totalQuantity ?? 0}
+                        </td>
+                      </>
+                    ) : (
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 font-semibold text-gray-800">{item.name}</td>
+                    )}
+
+                    {activeTab === "category" && (
+                      <td className="px-3 sm:px-6 py-2 sm:py-4">
+                        {item.material ? <span className="bg-purple-100 text-purple-800 text-xs px-2.5 py-1 rounded-full font-medium">{item.material.name}</span> : "-"}
+                      </td>
+                    )}
+
+                    {activeTab === "size" && (
                       <td className="px-3 sm:px-6 py-2 sm:py-4">
                         {item.category ? <span className="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-medium">{item.category.name}</span> : "-"}
                       </td>
-                      <td className="px-3 sm:px-6 py-2 sm:py-4">
-                        {item.size ? <span className="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-medium">{item.size.name}</span> : "-"}
-                      </td>
-                    </>
-                  )}
+                    )}
 
-                  <td className="px-2.5 sm:px-5 py-2 sm:py-4 text-right">
-                    <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:text-red-700 font-medium transition">
-                      ລົບ
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    {activeTab === "unit" && (
+                      <>
+                        <td className="px-3 sm:px-6 py-2 sm:py-4">
+                          {item.category ? <span className="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-medium">{item.category.name}</span> : "-"}
+                        </td>
+                        <td className="px-3 sm:px-6 py-2 sm:py-4">
+                          {item.size ? <span className="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-medium">{item.size.name}</span> : "-"}
+                        </td>
+                      </>
+                    )}
+
+                    <td className="px-2.5 sm:px-5 py-2 sm:py-4 text-right">
+                      <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:text-red-700 font-medium transition">
+                        ລົບ
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

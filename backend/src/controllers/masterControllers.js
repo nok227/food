@@ -3,17 +3,40 @@ const prisma = require("../config/prisma");
 const { catchAsync } = require("../middleware/errorHandler");
 
 // ================= 1. MATERIAL (ວັດຖຸດິບ) =================
-exports.getMaterials = catchAsync(async (req, res) => {
-  const data = await prisma.material.findMany({ orderBy: { id: "desc" } });
-  res.json(data);
-});
+exports.getMaterials = async (req, res, next) => {
+  try {
+    const materials = await prisma.material.findMany({
+      orderBy: { id: "desc" },
+    });
+    res.json(materials);
+  } catch (error) {
+    next(error);
+  }
+};
 
-exports.createMaterial = catchAsync(async (req, res) => {
-  const { name } = req.body;
-  if (!name || !name.trim()) return res.status(400).json({ error: "ກະລຸນາປ້ອນຊື່ວັດຖຸດິບ" });
-  const result = await prisma.material.create({ data: { name: name.trim() } });
-  res.json(result);
-});
+exports.createMaterial = async (req, res, next) => {
+  try {
+    const { name, imageUrl } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: "กรุณาระบุชื่อวัตถุดิบ" });
+    }
+
+    const newMaterial = await prisma.material.create({
+      data: {
+        name: name.trim(),
+        imageUrl: imageUrl || null, // ถ้าไม่มีรูปให้ใส่เป็น null
+      },
+    });
+
+    res.status(201).json(newMaterial);
+  } catch (error) {
+    if (error.code === "P2002") {
+      return res.status(400).json({ error: "ชื่อวัตถุดิบนี้มีในระบบแล้ว" });
+    }
+    next(error);
+  }
+};
 
 exports.deleteMaterial = catchAsync(async (req, res) => {
   await prisma.material.delete({ where: { id: Number(req.params.id) } });

@@ -2,14 +2,16 @@
 const BASE_URL = import.meta.env.VITE_API_URL + "/api/master";
 
 export const masterAPI = {
-  // Material
   getMaterials: () => fetch(`${BASE_URL}/materials`).then((r) => r.json()),
-  createMaterial: (name) =>
+  
+  // 🟢 ปรับให้ส่งชื่อ และ URL รูปภาพไปยัง Backend
+  createMaterial: (name, imageUrl) =>
     fetch(`${BASE_URL}/materials`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, imageUrl }),
     }).then((r) => r.json()),
+
   deleteMaterial: (id) =>
     fetch(`${BASE_URL}/materials/${id}`, { method: "DELETE" }).then((r) => r.json()),
 

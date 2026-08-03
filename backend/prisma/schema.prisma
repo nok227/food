@@ -9,10 +9,11 @@ generator client {
 model Material {
   id        Int      @id @default(autoincrement())
   name      String   @unique
+  imageUrl  String?  // 🟢 เพิ่มฟิลด์รูปภาพวัตถุดิบ (ใส่หรือไม่ใส่ก็ได้)
   createdAt DateTime @default(now())
 
   categories Category[]
-  stocks     Stock[]    // 🟢 ເພີ່ມRelation ຂາກັບຫາ Stock
+  stocks     Stock[]
 }
 
 model Category {
