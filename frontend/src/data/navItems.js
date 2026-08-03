@@ -6,5 +6,5 @@ export const navItems = [
   { path: "/orders", label: "ຈັດການອໍເດີ", icon: "🧾" }, // ເມນູທີສອງ
   { path: "/homepage", label: "ບັນທຶກເມນູ", icon: "🍜" },
   { path: "/about", label: "ລາຍງານຂໍ້ມູນ", icon: "ℹ️" },
-  { path: "/contact", label: "ติดต่อเรา", icon: "✉️" },
+  { path: "/qrcode", label: "QR Code ເປີດເວັບ", icon: "✉️" },
 ];

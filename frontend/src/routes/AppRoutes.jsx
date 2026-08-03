@@ -11,7 +11,7 @@ const StockPage = lazy(() => import("../pages/StockPage")); // 🟢 เพิ่
 const HomePage = lazy(() => import("../pages/HomePage"));
 const OrdersPage = lazy(() => import("../pages/OrdersPage"));
 const AboutPage = lazy(() => import("../pages/AboutPage"));
-const ContactPage = lazy(() => import("../pages/ContactPage"));
+const QRCodeModal = lazy(() => import("../pages/QRCodeModal"));
 const NotFoundPage = lazy(() => import("../pages/NotFoundPage"));
 
 function AppRoutes() {
@@ -82,10 +82,10 @@ function AppRoutes() {
 
             {/* ติดต่อเรา */}
             <Route
-              path="/contact"
+              path="/qrcode"
               element={
                 <Suspense fallback={<LoadingPage />}>
-                  <ContactPage />
+                  <QRCodeModal />
                 </Suspense>
               }
             />
