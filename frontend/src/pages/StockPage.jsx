@@ -24,7 +24,7 @@ export default function StockPage() {
     e.preventDefault();
     if (!selectedStockId || !importQty) return alert("กรุณากรอกข้อมูลให้ครบถ้วน");
     await stockAPI.importStock(selectedStockId, importQty, importNote);
-    alert("นำเข้าวัตถุดิบสำเร็จ!");
+    alert("นำเข้าวัตถุดิบสำเร็จ!!");
     setImportQty(""); setImportNote(""); setSelectedStockId("");
     loadAllData();
   };
